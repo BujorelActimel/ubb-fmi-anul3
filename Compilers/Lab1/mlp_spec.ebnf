@@ -1,0 +1,156 @@
+(* EBNF Specification for Golang MLP *)
+
+(* Program Structure *)
+program = "package", identifier, package_imports, [ declarations ], function_declarations ;
+
+package_imports = "import", ( string_literal | import_group ) ;
+import_group = "(", { string_literal }, ")" ;
+
+
+(* DECLARATIONS *)
+
+declarations = { declaration } ;
+declaration = const_declaration | type_declaration ;
+
+const_declaration = "const", identifier, type_specifier, "=", expression ;
+
+type_declaration = "type", identifier, struct_type ;
+struct_type = "struct", "{", { field_declaration }, "}" ;
+field_declaration = identifier, type_specifier ;
+
+function_declarations = { function_declaration } ;
+function_declaration = "func", [ receiver ], identifier, signature, function_body ;
+
+receiver = "(", identifier, [ "*" ], identifier, ")" ;
+signature = parameters, [ return_type ] ;
+parameters = "(", [ parameter_list ], ")" ;
+parameter_list = parameter_decl, { ",", parameter_decl } ;
+parameter_decl = identifier_list, type_specifier ;
+identifier_list = identifier, { ",", identifier } ;
+return_type = type_specifier ;
+
+function_body = "{", statement_list, "}" ;
+
+
+(* STATEMENTS *)
+
+statement_list = { statement } ;
+
+statement = declaration_statement
+          | short_var_declaration
+          | assignment_statement
+          | expression_statement
+          | return_statement
+          | if_statement
+          | for_statement
+          | compound_statement ;
+
+declaration_statement = "var", identifier_list, type_specifier, [ "=", expression ] ;
+
+short_var_declaration = identifier, ":=", expression ;
+
+assignment_statement = ( identifier | selector_expression ), assignment_operator, expression ;
+assignment_operator = "=" | "+=" | "-=" | "*=" | "/=" | "%=" ;
+
+expression_statement = expression ;
+
+return_statement = "return", [ expression ] ;
+
+if_statement = "if", expression, compound_statement, [ "else", compound_statement ] ;
+
+for_statement = "for", [ for_clause | expression ], compound_statement ;
+for_clause = [ simple_statement ], ";", [ expression ], ";", [ simple_statement ] ;
+simple_statement = assignment_statement | short_var_declaration ;
+
+compound_statement = "{", statement_list, "}" ;
+
+
+(* EXPRESSIONS *)
+
+expression = unary_expression
+           | binary_expression
+           | primary_expression ;
+
+primary_expression = identifier
+                   | constant
+                   | string_literal
+                   | function_call
+                   | selector_expression
+                   | address_expression
+                   | dereference_expression
+                   | type_conversion
+                   | composite_literal
+                   | "(", expression, ")" ;
+
+unary_expression = unary_operator, expression ;
+unary_operator = "+" | "-" | "!" | "&" | "*" ;
+
+binary_expression = expression, binary_operator, expression ;
+binary_operator = arithmetic_operator
+                | relational_operator
+                | logical_operator ;
+
+arithmetic_operator = "+" | "-" | "*" | "/" | "%" ;
+relational_operator = "==" | "!=" | "<" | "<=" | ">" | ">=" ;
+logical_operator = "&&" | "||" ;
+
+function_call = ( identifier | selector_expression ), "(", [ argument_list ], ")" ;
+argument_list = argument, { ",", argument } ;
+argument = expression | address_expression ;
+
+selector_expression = primary_expression, ".", identifier ;
+
+address_expression = "&", ( identifier | composite_literal | selector_expression ) ;
+
+dereference_expression = "*", primary_expression ;
+
+type_conversion = type_specifier, "(", expression, ")" ;
+
+composite_literal = "&", identifier, "{", [ field_initializer_list ], "}" ;
+field_initializer_list = field_initializer, { ",", field_initializer } ;
+field_initializer = identifier, ":", expression | expression ;
+
+
+(* TYPES *)
+
+type_specifier = basic_type | pointer_type | identifier ;
+
+basic_type = "int" | "float32" | "float64" | "string" | "bool" ;
+
+pointer_type = "*", identifier ;
+
+
+(* LEXICAL ELEMENTS *)
+
+identifier = letter, { letter | digit | "_" } ;
+
+constant = integer_constant | float_constant ;
+
+integer_constant = non_zero_digit, { digit } | "0" ;
+
+non_zero_digit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+float_constant = { digit }, ".", digit, { digit } | digit, { digit }, "." ;
+
+string_literal = '"', { string_char }, '"' ;
+string_char = ? any character except '"' and newline ?
+            | escape_sequence ;
+escape_sequence = "\n" | "\t" | "\r" | "\\" | '\"' ;
+
+letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+       | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+       | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
+       | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" ;
+
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+digit = "0" | ... | "9" ;
+
+(* COMMENTS *)
+
+comment = line_comment | block_comment ;
+line_comment = "//", { ? any character ? }, newline ;
+block_comment = "/*", { ? any character ? }, "*/" ;
+
+(* WHITESPACE *)
+
+whitespace = " " | "\t" | "\n" | "\r" ;

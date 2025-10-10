@@ -1,0 +1,8 @@
+package main
+
+import "fmt"
+
+func main() {
+	a := b + c
+	fmt.Printf("%d\n", a)
+}
