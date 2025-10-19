@@ -43,7 +43,9 @@ statement = declaration_statement
           | return_statement
           | if_statement
           | for_statement
-          | compound_statement ;
+          | compound_statement 
+          | input_statement
+          | output_statement ;
 
 declaration_statement = "var", identifier_list, type_specifier, [ "=", expression ] ;
 
@@ -64,6 +66,9 @@ simple_statement = assignment_statement | short_var_declaration ;
 
 compound_statement = "{", statement_list, "}" ;
 
+format_string = '"', "%", "d" | "s", '"'
+input_statement = "fmt.Scanf(", format_string, ", ", "&", identifier ,")"
+output_statement = "fmt.Printf(", format_string, ",", identifier, ")"
 
 (* EXPRESSIONS *)
 

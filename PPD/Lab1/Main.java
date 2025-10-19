@@ -3,7 +3,11 @@ import java.util.Random;
 import java.util.function.Supplier;
 
 public class Main {
-    private static int[] timeArraySum(String label, Supplier<int[]> sumFunction) {
+
+    private static int[] timeArraySum(
+        String label,
+        Supplier<int[]> sumFunction
+    ) {
         long startTime = System.currentTimeMillis();
         int[] result = sumFunction.get();
         long endTime = System.currentTimeMillis();
@@ -16,7 +20,7 @@ public class Main {
 
         int VEC_SIZE = 1000000;
         int NO_THREADS = 4;
- 
+
         int[] a = generateArray(VEC_SIZE, 10);
         int[] b = generateArray(VEC_SIZE, 10);
         int[] c_seq, c_cycl, c_int;
@@ -59,9 +63,9 @@ public class Main {
     }
 
     private static int[] generateArray(int size, int upperBound) {
-        int[] vec =  new int[size];
+        int[] vec = new int[size];
         Random rand = new Random();
- 
+
         for (int i = 0; i < size; i++) {
             vec[i] = rand.nextInt(upperBound);
         }
@@ -76,7 +80,12 @@ public class Main {
         return C;
     }
 
-    private static int[] sumArraysCycl(int[] A, int[] B, int size, int noThreads) throws InterruptedException {
+    private static int[] sumArraysCycl(
+        int[] A,
+        int[] B,
+        int size,
+        int noThreads
+    ) throws InterruptedException {
         int[] C = new int[size];
         CyclicalThread[] threads = new CyclicalThread[noThreads];
 
@@ -92,7 +101,12 @@ public class Main {
         return C;
     }
 
-    private static int[] sumArraysInterval(int[] A, int[] B, int size, int noThreads) throws InterruptedException {
+    private static int[] sumArraysInterval(
+        int[] A,
+        int[] B,
+        int size,
+        int noThreads
+    ) throws InterruptedException {
         int[] C = new int[size];
         IntervalThread[] threads = new IntervalThread[noThreads];
         int chunkSize = size / noThreads;
