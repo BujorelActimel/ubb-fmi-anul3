@@ -1,0 +1,15 @@
+Pos,Symbol
+1,%d
+2,0
+3,Printf
+4,Scanf
+5,a[%d] = 
+6,currentValue
+7,fmt
+8,i
+9,int
+10,main
+11,n
+12,n = 
+13,sum
+14,sum =  %d

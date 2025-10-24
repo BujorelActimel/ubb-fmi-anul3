@@ -159,3 +159,7 @@ func LookupIdentifier(ident string) TokenType {
 	}
 	return IDENTIFIER
 }
+
+func GetTokenName(t TokenType) string {
+	return tokenNames[t]
+}

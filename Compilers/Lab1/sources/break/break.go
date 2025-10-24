@@ -4,7 +4,7 @@ import "fmt"
 
 func main() {
 	counter := 0
-	for true {
+	for {
 		counter += 1
 		fmt.Printf("%d\n", counter)
 		break

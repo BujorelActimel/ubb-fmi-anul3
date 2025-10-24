@@ -1,0 +1,22 @@
+Pos,Symbol
+1,%d
+2,2
+3,3.14
+4,Circle
+5,Circle area = %.3f
+
+6,Circle perimeter = %.3f
+
+7,Circle radius = 
+8,ComputeArea
+9,ComputePerimeter
+10,NewCircle
+11,Printf
+12,Scanf
+13,c
+14,float32
+15,fmt
+16,int
+17,main
+18,pi
+19,radius
