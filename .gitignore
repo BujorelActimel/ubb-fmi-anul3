@@ -1,0 +1,5 @@
+PPD/tema1/data/*.txt
+PPD/tema1/output.txt
+*.log
+*.tmp
+.DS_Store
