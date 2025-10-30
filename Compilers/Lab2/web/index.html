@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulator Automate Finite</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Automate Finite</h1>
+                <p class="version">Lab 2 - Compilatoare</p>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Încărcare</h2>
+
+                <label class="file-input-label">
+                    <input type="file" id="file-upload" accept=".json">
+                    <span>Selectează fișier JSON</span>
+                </label>
+
+                <div class="button-group">
+                    <button id="load-example-afd-btn" class="btn-secondary">AFD Constante</button>
+                    <button id="load-example-afnd-btn" class="btn-secondary">AFND Exemplu</button>
+                </div>
+
+                <details class="collapsible">
+                    <summary>JSON Manual</summary>
+                    <textarea id="json-input" placeholder='{"states": [...], ...}'></textarea>
+                    <button id="parse-json-btn" class="btn-primary">Parsează</button>
+                </details>
+            </div>
+
+            <div id="automaton-info" class="sidebar-section info-section hidden">
+                <h2>Informații</h2>
+                <div class="info-row">
+                    <span class="info-label">Tip:</span>
+                    <span id="info-type" class="info-value">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Stări:</span>
+                    <span id="info-states" class="info-value">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Alfabet:</span>
+                    <span id="info-alphabet-display" class="info-value">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Inițială:</span>
+                    <span id="info-initial" class="info-value">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Finale:</span>
+                    <span id="info-final" class="info-value">-</span>
+                </div>
+            </div>
+
+            <div id="simulation-controls" class="sidebar-section hidden">
+                <h2>Simulare</h2>
+
+                <input type="text" id="sequence-input" class="text-input" placeholder="Introdu secvență...">
+
+                <div class="playback-controls">
+                    <button id="reset-btn" class="control-btn" title="Resetare">⟲</button>
+                    <button id="play-btn" class="control-btn play-btn" title="Redă">▶</button>
+                    <button id="pause-btn" class="control-btn hidden" title="Pauză">⏸</button>
+                </div>
+
+                <div class="slider-group">
+                    <label>Viteză: <span id="speed-label">800ms</span></label>
+                    <input type="range" id="speed-slider" min="100" max="2000" value="800" step="100">
+                </div>
+
+                <div id="active-states-display" class="states-display hidden"></div>
+            </div>
+
+            <div id="result-display" class="sidebar-section result-section hidden"></div>
+        </aside>
+
+        <main class="main-content">
+            <div id="no-automaton-message" class="placeholder">
+                <div class="placeholder-content">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <circle cx="12" cy="12" r="3"/>
+                        <line x1="12" y1="2" x2="12" y2="9"/>
+                        <line x1="12" y1="15" x2="12" y2="22"/>
+                    </svg>
+                    <p>Încarcă un automat pentru a începe</p>
+                </div>
+            </div>
+
+            <div id="main-view" class="hidden">
+                <div id="sequence-display" class="sequence-viewer"></div>
+                <div id="network" class="graph-canvas"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="wasm_exec.js"></script>
+    <script src="js/wasm-loader.js"></script>
+    <script src="js/visualizer.js"></script>
+    <script src="js/simulator.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

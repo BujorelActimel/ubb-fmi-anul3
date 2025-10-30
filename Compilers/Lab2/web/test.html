@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>Test Page</h1>
+    <pre id="output"></pre>
+
+    <script src="wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch('core.wasm'), go.importObject)
+            .then((result) => {
+                go.run(result.instance);
+
+                const testJSON = `{
+                    "states": ["q0", "q1"],
+                    "alphabet": ["a"],
+                    "transitions": {"q0": {"a": ["q1"]}},
+                    "initialState": "q0",
+                    "finalStates": ["q1"]
+                }`;
+
+                const validation = parseAutomaton(testJSON);
+                document.getElementById('output').textContent = JSON.stringify(validation, null, 2);
+            })
+            .catch((err) => {
+                document.getElementById('output').textContent = 'Error: ' + err;
+            });
+    </script>
+</body>
+</html>
