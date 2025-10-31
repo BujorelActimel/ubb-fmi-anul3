@@ -1,0 +1,46 @@
+automaton = "{" 
+            states "," 
+            alphabet "," 
+            transitions "," 
+            initial_state "," 
+            final_states 
+            "}" ;
+
+states = '"states"' ":" "[" state_list "]" ;
+
+state_list = state { "," state } ;
+
+state = '"' identifier '"' ;
+
+alphabet = '"alphabet"' ":" "[" symbol_list "]" ;
+
+symbol_list = symbol { "," symbol } ;
+
+symbol = '"' character '"' ;
+
+transitions = '"transitions"' ":" "{" transition_list "}" ;
+
+transition_list = state_transitions { "," state_transitions } ;
+
+state_transitions = state ":" "{" symbol_transitions "}" ;
+
+symbol_transitions = symbol_transition { "," symbol_transition } ;
+
+symbol_transition = symbol ":" "[" state_list "]" ;
+
+initial_state = '"initialState"' ":" state ;
+
+final_states = '"finalStates"' ":" "[" state_list "]" ;
+
+identifier = letter { letter | digit | "_" } ;
+
+character = letter | digit | special_char ;
+
+letter = "a" | ... |"z" |
+         "A" | ... | "Z" ;
+
+digit = "0" | ... | "9" ;
+
+special_char = "+" | "-" | "*" | "/" | "_" | "." | "," | ";" | ":" | "!" | "?" | 
+               "@" | "#" | "$" | "%" | "^" | "&" | "(" | ")" | "[" | "]" | 
+               "{" | "}" | "<" | ">" | "=" | "|" | "~" | "`" ;

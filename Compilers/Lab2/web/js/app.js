@@ -14,8 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function setupEventListeners() {
     document.getElementById('file-upload').addEventListener('change', handleFileUpload);
-    document.getElementById('load-example-afd-btn').addEventListener('click', loadExampleAFD);
-    document.getElementById('load-example-afnd-btn').addEventListener('click', loadExampleAFND);
     document.getElementById('parse-json-btn').addEventListener('click', parseManualJSON);
 
     document.getElementById('play-btn').addEventListener('click', handlePlay);
@@ -48,26 +46,6 @@ async function handleFileUpload(e) {
         }
     };
     reader.readAsText(file);
-}
-
-async function loadExampleAFD() {
-    try {
-        const response = await fetch('examples/integer_constants.json');
-        const json = await response.text();
-        await loadAutomaton(json);
-    } catch (error) {
-        alert('Eroare la încărcarea exemplului: ' + error.message);
-    }
-}
-
-async function loadExampleAFND() {
-    try {
-        const response = await fetch('examples/nfa_example.json');
-        const json = await response.text();
-        await loadAutomaton(json);
-    } catch (error) {
-        alert('Eroare la încărcarea exemplului: ' + error.message);
-    }
 }
 
 async function parseManualJSON() {
@@ -130,11 +108,8 @@ async function handlePlay() {
         return;
     }
 
-    const sequence = document.getElementById('sequence-input').value.trim();
-    if (!sequence) {
-        alert('Introduceți o secvență!');
-        return;
-    }
+    const sequence = document.getElementById('sequence-input').value;
+    // Allow empty string (epsilon sequence)
 
     if (simulator.isPlaying) {
         return;

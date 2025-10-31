@@ -26,20 +26,20 @@ class Simulator {
         this.subStep = 0;
 
         this.animationInterval = setInterval(() => {
-            if (this.currentStep < this.steps.length - 1 || this.subStep < 2) {
+            if (this.currentStep < this.steps.length - 1 || this.subStep < 3) {
                 if (this.subStep === 0) {
                     this.currentStep++;
                 }
                 this.renderStep();
                 this.subStep++;
-                if (this.subStep > 2) {
+                if (this.subStep > 3) {
                     this.subStep = 0;
                 }
             } else {
                 this.pause();
                 this.showFinalResult();
             }
-        }, this.speed / 3);
+        }, this.speed / 4);
     }
 
     pause() {
@@ -84,9 +84,13 @@ class Simulator {
             this.visualizer.highlightStates(fromStates);
             this.visualizer.highlightTransitions(step.transitions);
             this.updateActiveStates(fromStates);
-        } else {
+        } else if (this.subStep === 2) {
             this.visualizer.highlightStates(step.activeStates);
             this.visualizer.highlightTransitions(step.transitions);
+            this.updateActiveStates(step.activeStates);
+        } else {
+            this.visualizer.highlightStates(step.activeStates);
+            this.visualizer.highlightTransitions([]);
             this.updateActiveStates(step.activeStates);
         }
     }

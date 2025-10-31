@@ -14,7 +14,7 @@ func main() {
 	var fa *FiniteAutomaton
 
 	fmt.Println("╔════════════════════════════════════════════════════╗")
-	fmt.Println("║     Simulator Automate Finite - Lab 2              ║")
+	fmt.Println("║     Simulator Automate Finite                      ║")
 	fmt.Println("╚════════════════════════════════════════════════════╝")
 	fmt.Println()
 

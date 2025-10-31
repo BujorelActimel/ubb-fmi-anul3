@@ -48,7 +48,7 @@ class GraphVisualizer {
 
         this.svg.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const delta = e.deltaY > 0 ? 0.98 : 1.02;
             scale *= delta;
             scale = Math.min(Math.max(scale, 0.3), 3);
             this.mainGroup.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
@@ -85,17 +85,61 @@ class GraphVisualizer {
         const states = this.automaton.states;
         const numStates = states.length;
 
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const radius = Math.min(width, height) * 0.35;
+        const levels = {};
+        const visited = new Set();
+        const queue = [[this.automaton.initialState, 0]];
+        visited.add(this.automaton.initialState);
+        levels[this.automaton.initialState] = 0;
 
-        states.forEach((state, i) => {
-            const angle = (2 * Math.PI * i) / numStates - Math.PI / 2;
-            this.nodePositions[state] = {
-                x: centerX + radius * Math.cos(angle),
-                y: centerY + radius * Math.sin(angle)
-            };
-        });
+        let maxLevel = 0;
+        while (queue.length > 0) {
+            const [state, level] = queue.shift();
+            maxLevel = Math.max(maxLevel, level);
+
+            const transitions = this.automaton.transitions[state] || {};
+            for (const [symbol, toStates] of Object.entries(transitions)) {
+                for (const toState of toStates) {
+                    if (!visited.has(toState)) {
+                        visited.add(toState);
+                        levels[toState] = level + 1;
+                        queue.push([toState, level + 1]);
+                    }
+                }
+            }
+        }
+
+        for (const state of states) {
+            if (levels[state] === undefined) {
+                maxLevel++;
+                levels[state] = maxLevel;
+            }
+        }
+
+        const levelCounts = {};
+        for (const [state, level] of Object.entries(levels)) {
+            levelCounts[level] = (levelCounts[level] || 0) + 1;
+        }
+
+        const levelIndices = {};
+        for (const level of Object.keys(levelCounts)) {
+            levelIndices[level] = 0;
+        }
+
+        const marginX = 100;
+        const marginY = 80;
+        const levelWidth = (width - 2 * marginX) / (maxLevel || 1);
+
+        for (const state of states) {
+            const level = levels[state];
+            const countAtLevel = levelCounts[level];
+            const index = levelIndices[level]++;
+
+            const x = marginX + level * levelWidth;
+            const ySpacing = countAtLevel > 1 ? (height - 2 * marginY) / (countAtLevel - 1) : 0;
+            const y = countAtLevel === 1 ? height / 2 : marginY + index * ySpacing;
+
+            this.nodePositions[state] = { x, y };
+        }
     }
 
     drawEdges() {
@@ -155,8 +199,8 @@ class GraphVisualizer {
         if (!fromPos || !toPos) return;
 
         let label;
-        if (symbols.length > 4) {
-            label = `${symbols[0]}, ..., ${symbols[symbols.length - 1]}`;
+        if (symbols.length > 3) {
+            label = `${symbols[0]}, ${symbols[1]}, ${symbols[2]}, ...`;
         } else {
             label = symbols.join(', ');
         }
@@ -209,7 +253,7 @@ class GraphVisualizer {
             text.setAttribute('font-size', '14');
             text.textContent = label;
 
-            if (symbols.length > 4) {
+            if (symbols.length > 3) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
                 title.textContent = fullLabel;
                 text.appendChild(title);
@@ -242,7 +286,7 @@ class GraphVisualizer {
             text.setAttribute('font-size', '14');
             text.textContent = label;
 
-            if (symbols.length > 4) {
+            if (symbols.length > 3) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
                 title.textContent = fullLabel;
                 text.appendChild(title);

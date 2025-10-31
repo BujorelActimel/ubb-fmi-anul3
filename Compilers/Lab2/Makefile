@@ -5,8 +5,8 @@ all: build-cli build-wasm
 build-cli:
 	@echo "Building CLI..."
 	@mkdir -p bin
-	cd core && go build -tags !wasm -o ../bin/fa-cli
-	@echo "CLI built successfully: bin/fa-cli"
+	cd core && go build -tags !wasm -o ../bin/cli
+	@echo "CLI built successfully: bin/cli"
 
 build-wasm:
 	@echo "Building WASM..."
