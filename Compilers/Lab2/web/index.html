@@ -5,54 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulator Automate Finite</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
 </head>
 <body>
     <div class="app">
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h1>Automate Finite</h1>
+                <button id="sidebar-toggle" class="sidebar-toggle-btn" title="Ascunde sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
             </div>
 
             <div class="sidebar-section">
-                <h2>Încărcare</h2>
+                <h2>Automat</h2>
 
                 <label class="file-input-label">
                     <input type="file" id="file-upload" accept=".json">
-                    <span>Selectează fișier JSON</span>
+                    <span>Importă JSON</span>
                 </label>
 
-                <details class="collapsible">
-                    <summary>JSON Manual</summary>
-                    <textarea id="json-input" placeholder='{"states": [...], ...}'></textarea>
-                    <button id="parse-json-btn" class="btn-primary">Parsează</button>
-                </details>
+                <button id="export-btn" class="btn-secondary">Exportă JSON</button>
             </div>
 
-            <div id="automaton-info" class="sidebar-section info-section hidden">
-                <h2>Informații</h2>
-                <div class="info-row">
-                    <span class="info-label">Tip:</span>
-                    <span id="info-type" class="info-value">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Stări:</span>
-                    <span id="info-states" class="info-value">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Alfabet:</span>
-                    <span id="info-alphabet-display" class="info-value">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Inițială:</span>
-                    <span id="info-initial" class="info-value">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Finale:</span>
-                    <span id="info-final" class="info-value">-</span>
-                </div>
-            </div>
-
-            <div id="simulation-controls" class="sidebar-section hidden">
+            <div id="simulation-controls" class="sidebar-section">
                 <h2>Simulare</h2>
 
                 <input type="text" id="sequence-input" class="text-input" placeholder="Introdu secvență...">
@@ -67,37 +44,57 @@
                     <label>Viteză: <span id="speed-label">800ms</span></label>
                     <input type="range" id="speed-slider" min="100" max="2000" value="800" step="100">
                 </div>
-
-                <div id="active-states-display" class="states-display hidden"></div>
             </div>
 
-            <div id="result-display" class="sidebar-section result-section hidden"></div>
         </aside>
 
+        <!-- Sidebar show button (when collapsed) -->
+        <button id="sidebar-show" class="sidebar-show-btn hidden" title="Arată sidebar">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+
         <main class="main-content">
-            <div id="no-automaton-message" class="placeholder">
-                <div class="placeholder-content">
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="12" cy="12" r="10"/>
-                        <circle cx="12" cy="12" r="3"/>
-                        <line x1="12" y1="2" x2="12" y2="9"/>
-                        <line x1="12" y1="15" x2="12" y2="22"/>
-                    </svg>
-                    <p>Încarcă un automat pentru a începe</p>
+            <div id="sequence-display" class="sequence-viewer"></div>
+            <div id="cy" class="graph-canvas">
+                <button id="clear-btn" class="editor-btn editor-btn-top-left" title="Șterge tot">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button id="auto-layout-btn" class="editor-btn editor-btn-top-right" title="Aranjează automat">
+                    <i class="fas fa-project-diagram"></i>
+                </button>
+
+                <!-- Keyboard shortcuts help button -->
+                <button id="help-btn" class="editor-btn editor-btn-bottom-right" title="Taste scurte">
+                    <i class="fas fa-question"></i>
+                </button>
+
+                <!-- Keyboard shortcuts popup -->
+                <div id="keyboard-help-popup" class="keyboard-help-popup hidden">
+                    <div class="help-title">Taste scurte</div>
+                    <div class="help-item"><kbd>N</kbd> Tranziție nouă</div>
+                    <div class="help-item"><kbd>E</kbd> Editează</div>
+                    <div class="help-item"><kbd>D</kbd> Șterge</div>
+                    <div class="help-item"><kbd>Esc</kbd> Anulează</div>
                 </div>
             </div>
 
-            <div id="main-view" class="hidden">
-                <div id="sequence-display" class="sequence-viewer"></div>
-                <div id="network" class="graph-canvas"></div>
+            <!-- Custom modal -->
+            <div id="custom-modal" class="modal hidden">
+                <div class="modal-content">
+                    <h3 id="modal-title"></h3>
+                    <div id="modal-body"></div>
+                    <div class="modal-actions">
+                        <button id="modal-ok" class="btn-primary">OK</button>
+                        <button id="modal-cancel" class="btn-secondary">Cancel</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
     <script src="wasm_exec.js"></script>
     <script src="js/wasm-loader.js"></script>
-    <script src="js/visualizer.js"></script>
-    <script src="js/simulator.js"></script>
+    <script src="js/editor.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

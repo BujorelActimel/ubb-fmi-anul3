@@ -6,6 +6,18 @@ class GraphVisualizer {
         this.nodePositions = {};
         this.nodeElements = {};
         this.edgeElements = [];
+
+        // Edit mode support
+        this.mode = 'VIEW'; // 'VIEW' or 'EDIT'
+        this.selectedState = null;
+        this.dragState = null;
+        this.dragStartPos = null;
+        this.stateCounter = 0;
+
+        // Store zoom/pan state
+        this.scale = 1;
+        this.translateX = 0;
+        this.translateY = 0;
     }
 
     drawAutomaton(automaton) {
@@ -36,78 +48,102 @@ class GraphVisualizer {
 
         this.setupZoomPan();
 
+        // Enable dragging if in edit mode
+        if (this.mode === 'EDIT') {
+            this.makeNodesDraggable();
+        }
+
         console.log('Graph drawn successfully');
     }
 
     setupZoomPan() {
-        let scale = 1;
-        let translateX = 0;
-        let translateY = 0;
-        let isDragging = false;
+        let isPanning = false;
         let startX, startY;
 
         this.svg.addEventListener('wheel', (e) => {
             e.preventDefault();
             const delta = e.deltaY > 0 ? 0.98 : 1.02;
-            scale *= delta;
-            scale = Math.min(Math.max(scale, 0.3), 3);
-            this.mainGroup.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
+            this.scale *= delta;
+            this.scale = Math.min(Math.max(this.scale, 0.3), 3);
+            this.mainGroup.setAttribute('transform', `translate(${this.translateX}, ${this.translateY}) scale(${this.scale})`);
         });
 
         this.svg.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX - translateX;
-            startY = e.clientY - translateY;
-            this.svg.style.cursor = 'grabbing';
+            // Only pan if we're in VIEW mode or not clicking on a state
+            if (this.mode === 'VIEW' || !e.target.closest('.node')) {
+                isPanning = true;
+                startX = e.clientX - this.translateX;
+                startY = e.clientY - this.translateY;
+                this.svg.style.cursor = 'grabbing';
+            }
         });
 
         this.svg.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            translateX = e.clientX - startX;
-            translateY = e.clientY - startY;
-            this.mainGroup.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
+            if (!isPanning) return;
+            this.translateX = e.clientX - startX;
+            this.translateY = e.clientY - startY;
+            this.mainGroup.setAttribute('transform', `translate(${this.translateX}, ${this.translateY}) scale(${this.scale})`);
         });
 
         this.svg.addEventListener('mouseup', () => {
-            isDragging = false;
-            this.svg.style.cursor = 'grab';
+            isPanning = false;
+            this.svg.style.cursor = this.mode === 'EDIT' ? 'default' : 'grab';
         });
 
         this.svg.addEventListener('mouseleave', () => {
-            isDragging = false;
+            isPanning = false;
             this.svg.style.cursor = 'default';
         });
 
-        this.svg.style.cursor = 'grab';
+        this.svg.style.cursor = this.mode === 'EDIT' ? 'default' : 'grab';
     }
 
     calculateNodePositions(width, height) {
+        // Check if we have manual positions in the automaton data
+        if (this.automaton.positions && Object.keys(this.automaton.positions).length > 0) {
+            // Use manual positions
+            this.nodePositions = { ...this.automaton.positions };
+            return;
+        }
+
+        // Otherwise, use auto-layout (BFS-based hierarchical layout)
         const states = this.automaton.states;
         const numStates = states.length;
 
+        // Handle empty automaton
+        if (numStates === 0) {
+            this.nodePositions = {};
+            return;
+        }
+
         const levels = {};
         const visited = new Set();
-        const queue = [[this.automaton.initialState, 0]];
-        visited.add(this.automaton.initialState);
-        levels[this.automaton.initialState] = 0;
 
+        // Only do BFS if we have an initial state
         let maxLevel = 0;
-        while (queue.length > 0) {
-            const [state, level] = queue.shift();
-            maxLevel = Math.max(maxLevel, level);
+        if (this.automaton.initialState && states.includes(this.automaton.initialState)) {
+            const queue = [[this.automaton.initialState, 0]];
+            visited.add(this.automaton.initialState);
+            levels[this.automaton.initialState] = 0;
 
-            const transitions = this.automaton.transitions[state] || {};
-            for (const [symbol, toStates] of Object.entries(transitions)) {
-                for (const toState of toStates) {
-                    if (!visited.has(toState)) {
-                        visited.add(toState);
-                        levels[toState] = level + 1;
-                        queue.push([toState, level + 1]);
+            while (queue.length > 0) {
+                const [state, level] = queue.shift();
+                maxLevel = Math.max(maxLevel, level);
+
+                const transitions = this.automaton.transitions[state] || {};
+                for (const [symbol, toStates] of Object.entries(transitions)) {
+                    for (const toState of toStates) {
+                        if (!visited.has(toState)) {
+                            visited.add(toState);
+                            levels[toState] = level + 1;
+                            queue.push([toState, level + 1]);
+                        }
                     }
                 }
             }
         }
 
+        // Place any unvisited states
         for (const state of states) {
             if (levels[state] === undefined) {
                 maxLevel++;
@@ -396,5 +432,209 @@ class GraphVisualizer {
     reset() {
         this.highlightStates([]);
         this.highlightTransitions([]);
+    }
+
+    // Mode management methods
+    enableEditMode() {
+        this.mode = 'EDIT';
+        this.svg.style.cursor = 'default';
+        this.attachEditListeners();
+    }
+
+    disableEditMode() {
+        this.mode = 'VIEW';
+        this.svg.style.cursor = 'grab';
+        this.selectedState = null;
+        this.removeEditListeners();
+        this.clearSelection();
+    }
+
+    attachEditListeners() {
+        // Double-click to add state
+        this.svg.addEventListener('dblclick', this.onCanvasDoubleClick.bind(this));
+
+        // Keyboard listener for delete
+        document.addEventListener('keydown', this.onKeyDown.bind(this));
+    }
+
+    removeEditListeners() {
+        this.svg.removeEventListener('dblclick', this.onCanvasDoubleClick.bind(this));
+        document.removeEventListener('keydown', this.onKeyDown.bind(this));
+    }
+
+    onCanvasDoubleClick(e) {
+        if (this.mode !== 'EDIT') return;
+
+        // Don't add state if clicking on an existing state
+        if (e.target.closest('.node')) return;
+
+        // Get click position relative to the SVG
+        const rect = this.svg.getBoundingClientRect();
+        const x = (e.clientX - rect.left - this.translateX) / this.scale;
+        const y = (e.clientY - rect.top - this.translateY) / this.scale;
+
+        // Generate new state name
+        const newStateName = this.generateStateName();
+
+        // Trigger callback to add state
+        if (this.onStateAdded) {
+            this.onStateAdded(newStateName, x, y);
+        }
+    }
+
+    onKeyDown(e) {
+        if (this.mode !== 'EDIT') return;
+
+        if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedState) {
+            e.preventDefault();
+            if (this.onStateDeleted) {
+                this.onStateDeleted(this.selectedState);
+            }
+        }
+    }
+
+    generateStateName() {
+        // Find the next available q[n] name
+        let name;
+        do {
+            name = `q${this.stateCounter++}`;
+        } while (this.automaton && this.automaton.states.includes(name));
+        return name;
+    }
+
+    selectState(stateName) {
+        this.clearSelection();
+        this.selectedState = stateName;
+        const g = this.nodeElements[stateName];
+        if (g) {
+            const circle = g.querySelector('circle');
+            circle.setAttribute('stroke', '#f0883e');
+            circle.setAttribute('stroke-width', '3');
+        }
+    }
+
+    clearSelection() {
+        if (this.selectedState && this.nodeElements[this.selectedState]) {
+            const g = this.nodeElements[this.selectedState];
+            const circle = g.querySelector('circle');
+            const isFinal = this.automaton.finalStates.includes(this.selectedState);
+            circle.setAttribute('stroke', isFinal ? '#58a6ff' : '#30363d');
+            circle.setAttribute('stroke-width', isFinal ? '3' : '2');
+        }
+        this.selectedState = null;
+    }
+
+    makeNodesDraggable() {
+        for (const [state, g] of Object.entries(this.nodeElements)) {
+            g.style.cursor = 'move';
+
+            g.addEventListener('mousedown', (e) => {
+                if (this.mode !== 'EDIT') return;
+                e.stopPropagation();
+
+                this.dragState = state;
+                this.selectState(state);
+
+                const pos = this.nodePositions[state];
+                const rect = this.svg.getBoundingClientRect();
+                this.dragStartPos = {
+                    x: (e.clientX - rect.left - this.translateX) / this.scale - pos.x,
+                    y: (e.clientY - rect.top - this.translateY) / this.scale - pos.y
+                };
+            });
+        }
+
+        this.svg.addEventListener('mousemove', (e) => {
+            if (!this.dragState || this.mode !== 'EDIT') return;
+
+            const rect = this.svg.getBoundingClientRect();
+            const x = (e.clientX - rect.left - this.translateX) / this.scale - this.dragStartPos.x;
+            const y = (e.clientY - rect.top - this.translateY) / this.scale - this.dragStartPos.y;
+
+            this.updateStatePosition(this.dragState, x, y);
+        });
+
+        this.svg.addEventListener('mouseup', (e) => {
+            if (this.dragState && this.mode === 'EDIT') {
+                const state = this.dragState;
+                const pos = this.nodePositions[state];
+
+                // Trigger callback to save position
+                if (this.onStatePositionChanged) {
+                    this.onStatePositionChanged(state, pos.x, pos.y);
+                }
+
+                this.dragState = null;
+                this.dragStartPos = null;
+            }
+        });
+    }
+
+    updateStatePosition(state, x, y) {
+        this.nodePositions[state] = { x, y };
+
+        // Update node position
+        const g = this.nodeElements[state];
+        if (g) {
+            const circles = g.querySelectorAll('circle');
+            circles.forEach(circle => {
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+            });
+            const text = g.querySelector('text');
+            if (text) {
+                text.setAttribute('x', x);
+                text.setAttribute('y', y + 5);
+            }
+        }
+
+        // Update connected edges
+        this.updateEdgesForState(state);
+    }
+
+    updateEdgesForState(state) {
+        // Redraw all edges connected to this state
+        this.edgeElements.forEach((edgeG, index) => {
+            if (edgeG.dataset.from === state || edgeG.dataset.to === state) {
+                const from = edgeG.dataset.from;
+                const to = edgeG.dataset.to;
+                const symbols = JSON.parse(edgeG.dataset.symbols);
+
+                // Remove old edge
+                edgeG.remove();
+
+                // Redraw edge with new positions
+                this.drawEdge(from, to, symbols);
+            }
+        });
+
+        // Update edge elements array (filter out removed elements)
+        this.edgeElements = Array.from(this.mainGroup.querySelectorAll('.edge'));
+
+        // Redraw initial arrow if this is the initial state
+        if (state === this.automaton.initialState) {
+            const oldArrow = this.mainGroup.querySelector('line[marker-end="url(#arrowhead-blue)"]');
+            if (oldArrow) oldArrow.remove();
+            this.drawInitialArrow(this.nodePositions[state]);
+        }
+    }
+
+    clearLayout() {
+        // Clear all manual positions and recalculate layout
+        this.automaton.positions = {};
+        const width = this.container.offsetWidth || 800;
+        const height = this.container.offsetHeight || 600;
+        this.calculateNodePositions(width, height);
+        this.drawAutomaton(this.automaton);
+    }
+
+    loadAutomaton(automaton) {
+        this.automaton = automaton;
+        this.drawAutomaton(automaton);
+
+        // Make nodes draggable if in edit mode
+        if (this.mode === 'EDIT') {
+            this.makeNodesDraggable();
+        }
     }
 }
