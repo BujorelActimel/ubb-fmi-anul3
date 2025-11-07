@@ -2,9 +2,11 @@ package main
 
 import "fmt"
 
-// _____++__+_
-
 func main() {
-	a:=2 + 3..5
-	b := a + 10
-	fmt.Printf("%d\n", b)
+	a := 1._5
+	b := 2.e10
+	c := 3.14_
+	d := 4._
+	e := 5.1__2
+	fmt.Printf("%f %f %f %f %f\n", a, b, c, d, e)
+}

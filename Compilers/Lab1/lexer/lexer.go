@@ -2,6 +2,8 @@ package lexer
 
 import (
 	"unicode"
+
+	"github.com/bujor/compilers/shared/automaton"
 )
 
 type Lexer struct {
@@ -11,6 +13,10 @@ type Lexer struct {
 	ch           byte
 	line         int
 	column       int
+
+	identifierFA *automaton.FiniteAutomaton
+	integerFA    *automaton.FiniteAutomaton
+	floatFA      *automaton.FiniteAutomaton
 }
 
 func New(input string) *Lexer {
@@ -18,6 +24,19 @@ func New(input string) *Lexer {
 		input:  input,
 		line:   1,
 		column: 0,
+	}
+	l.readChar()
+	return l
+}
+
+func NewWithAutomata(input string, identifierFA, integerFA, floatFA *automaton.FiniteAutomaton) *Lexer {
+	l := &Lexer{
+		input:        input,
+		line:         1,
+		column:       0,
+		identifierFA: identifierFA,
+		integerFA:    integerFA,
+		floatFA:      floatFA,
 	}
 	l.readChar()
 	return l
@@ -169,7 +188,18 @@ func (l *Lexer) NextToken() Token {
 	case ';':
 		tok = Token{Type: SEMICOLON, Literal: string(l.ch), Line: tok.Line, Column: tok.Column}
 	case '.':
-		if isDigit(l.peekChar()) {
+		if l.floatFA != nil {
+			remainingInput := l.input[l.position:]
+			prefix, result := l.floatFA.LongestPrefix(remainingInput)
+			if prefix != "" && result.Accepted {
+				tok.Type = FLOAT
+				tok.Literal = prefix
+				for range prefix {
+					l.readChar()
+				}
+				return tok
+			}
+		} else if isDigit(l.peekChar()) {
 			tok.Type = FLOAT
 			tok.Literal = l.readFloatStartingWithDot()
 			return tok
@@ -182,15 +212,80 @@ func (l *Lexer) NextToken() Token {
 	case 0:
 		tok = Token{Type: EOF, Literal: "", Line: tok.Line, Column: tok.Column}
 	default:
-		if isLetter(l.ch) {
-			tok.Literal = l.readIdentifier()
-			tok.Type = LookupIdentifier(tok.Literal)
-			return tok
+		if isLetter(l.ch) || l.ch == '_' {
+			if l.identifierFA != nil {
+				remainingInput := l.input[l.position:]
+				prefix, result := l.identifierFA.LongestPrefix(remainingInput)
+				if prefix != "" && result.Accepted {
+					tok.Literal = prefix
+					tok.Type = LookupIdentifier(tok.Literal)
+					for range prefix {
+						l.readChar()
+					}
+					return tok
+				}
+			} else {
+				tok.Literal = l.readIdentifier()
+				tok.Type = LookupIdentifier(tok.Literal)
+				return tok
+			}
 		} else if isDigit(l.ch) {
-			return l.readNumber(tok)
-		} else {
-			tok = Token{Type: ILLEGAL, Literal: string(l.ch), Line: tok.Line, Column: tok.Column}
+			if l.floatFA != nil && l.integerFA != nil {
+				remainingInput := l.input[l.position:]
+
+				floatPrefix, floatResult := l.floatFA.LongestPrefix(remainingInput)
+				intPrefix, intResult := l.integerFA.LongestPrefix(remainingInput)
+
+				testLiteral := l.peekNumberLike()
+
+				if len(testLiteral) > len(floatPrefix) && len(testLiteral) > len(intPrefix) {
+					tok.Type = ILLEGAL
+					tok.Literal = testLiteral
+					for range testLiteral {
+						l.readChar()
+					}
+					return tok
+				}
+
+				if len(floatPrefix) > len(intPrefix) && floatResult.Accepted {
+					tok.Type = FLOAT
+					tok.Literal = floatPrefix
+					for range floatPrefix {
+						l.readChar()
+					}
+					return tok
+				} else if intResult.Accepted {
+					tok.Type = INT
+					tok.Literal = intPrefix
+					for range intPrefix {
+						l.readChar()
+					}
+
+					if l.ch == '.' {
+						testInput := intPrefix + string(l.input[l.position:])
+						testFloatPrefix, testFloatResult := l.floatFA.LongestPrefix(testInput)
+
+						nextChar := l.peekChar()
+						if !testFloatResult.Accepted || len(testFloatPrefix) <= len(intPrefix) {
+							if isDigit(nextChar) || nextChar == '_' || nextChar == 'e' || nextChar == 'E' {
+								invalidLiteral := intPrefix + "."
+								l.readChar() // consume '.'
+								for isDigit(l.ch) || l.ch == '_' || l.ch == 'e' || l.ch == 'E' || l.ch == '+' || l.ch == '-' {
+									invalidLiteral += string(l.ch)
+									l.readChar()
+								}
+								return Token{Type: ILLEGAL, Literal: invalidLiteral, Line: tok.Line, Column: tok.Column}
+							}
+						}
+					}
+
+					return tok
+				}
+			} else {
+				return l.readNumber(tok)
+			}
 		}
+		tok = Token{Type: ILLEGAL, Literal: string(l.ch), Line: tok.Line, Column: tok.Column}
 	}
 
 	l.readChar()
@@ -327,4 +422,31 @@ func isLetter(ch byte) bool {
 
 func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
+}
+
+func (l *Lexer) peekNumberLike() string {
+	pos := l.position
+
+	for pos < len(l.input) && (isDigit(l.input[pos]) || l.input[pos] == '_') {
+		pos++
+	}
+
+	if pos < len(l.input) && l.input[pos] == '.' {
+		pos++
+		for pos < len(l.input) && (isDigit(l.input[pos]) || l.input[pos] == '_') {
+			pos++
+		}
+	}
+
+	if pos < len(l.input) && (l.input[pos] == 'e' || l.input[pos] == 'E') {
+		pos++
+		if pos < len(l.input) && (l.input[pos] == '+' || l.input[pos] == '-') {
+			pos++
+		}
+		for pos < len(l.input) && (isDigit(l.input[pos]) || l.input[pos] == '_') {
+			pos++
+		}
+	}
+
+	return l.input[l.position:pos]
 }

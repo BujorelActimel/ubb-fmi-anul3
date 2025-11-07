@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/bujor/compilers/shared/automaton"
 )
 
 func main() {
@@ -23,7 +25,25 @@ func main() {
 
 	fmt.Printf("Analyzing file: %s\n\n", filename)
 
-	l := lexer.New(string(content))
+	identifierFA, err := automaton.ParseFromFile("../shared/automaton/definitions/identifier.json")
+	if err != nil {
+		fmt.Printf("Error loading identifier automaton: %v\n", err)
+		os.Exit(1)
+	}
+
+	integerFA, err := automaton.ParseFromFile("../shared/automaton/definitions/integer.json")
+	if err != nil {
+		fmt.Printf("Error loading integer automaton: %v\n", err)
+		os.Exit(1)
+	}
+
+	floatFA, err := automaton.ParseFromFile("../shared/automaton/definitions/float.json")
+	if err != nil {
+		fmt.Printf("Error loading float automaton: %v\n", err)
+		os.Exit(1)
+	}
+
+	l := lexer.NewWithAutomata(string(content), identifierFA, integerFA, floatFA)
 	tokens := make([]lexer.Token, 0)
 
 	for {
