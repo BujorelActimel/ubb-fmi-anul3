@@ -166,23 +166,6 @@ BigNumber addMPI1(const BigNumber& a, const BigNumber& b) {
     }
 }
 
-/**
- * Varianta 1.1 MPI - Optimizată cu SPECULAȚIE și comunicare non-blocking
- *
- * OPTIMIZĂRI:
- * 1. SPECULAȚIE: Workers calculează rezultatul ÎNAINTE să primească carry-ul de la precedent
- *    - Folosește MPI_Irecv (non-blocking receive) pentru carry
- *    - Calculează speculativ presupunând carry incoming = 0
- *    - Când primește carry-ul real:
- *      * Dacă carry = 0 → speculația era corectă, gata! (best case: ~50% șanse)
- *      * Dacă carry ≠ 0 → corectează doar propagarea carry-ului (worst case: calcul minim)
- *
- * 2. NON-BLOCKING SEND: Workers trimit rezultatul la master NON-BLOCKING
- *    - MPI_Isend pentru rezultat permite overlap cu alți workeri
- *
- * Beneficiu: În timp ce worker așteaptă carry, DEJA calculează rezultatul!
- * Overhead în worst case: doar recalcularea propagării carry-ului (nu toată adunarea)
- */
 BigNumber addMPI1_Optimized(const BigNumber& a, const BigNumber& b) {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
