@@ -71,7 +71,7 @@ TEST_CONFIGS = [
     }
 ]
 
-RUNS_PER_VARIANT = 1
+RUNS_PER_VARIANT = 10
 
 def run_variant(variant, input1, input2, output, num_procs=None, runs=10):
     times = []
