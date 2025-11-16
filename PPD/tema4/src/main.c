@@ -1,28 +1,79 @@
 #include <stdio.h>
-#include <time.h>
-#include "list.c"
+#include <string.h>
+#include "data_generator.h"
+#include "sequential.h"
+#include "parallel.h"
 
-int main() {
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+#define NUM_STUDENTS 200
+#define NUM_PROJECTS 10
+#define MIN_GRADES_PER_FILE 80
+#define MAX_GRADE 10
 
-    List* gradeList = createList();
+int compare_results(const char* file1, const char* file2) {
+    FILE* f1 = fopen(file1, "r");
+    FILE* f2 = fopen(file2, "r");
 
-    for (int i = 1; i <= 10; i++) {
-        char filename[50];
-        sprintf(filename, "data/proiect%d.txt", i);
-        readFromFile(gradeList, filename);
+    if (!f1 || !f2) {
+        if (f1) fclose(f1);
+        if (f2) fclose(f2);
+        return -1;
     }
 
-    saveToFile(gradeList, "rezultate.txt");
+    char line1[256], line2[256];
 
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    while (1) {
+        char* r1 = fgets(line1, sizeof(line1), f1);
+        char* r2 = fgets(line2, sizeof(line2), f2);
 
-    double time_spent = (end.tv_sec - start.tv_sec) +
-                        (end.tv_nsec - start.tv_nsec) / 1000000000.0;
+        if (r1 == NULL && r2 == NULL) {
+            fclose(f1);
+            fclose(f2);
+            return 0;
+        }
 
-    printf("Sequential execution time: %.6f seconds\n", time_spent);
+        if (r1 == NULL || r2 == NULL || strcmp(line1, line2) != 0) {
+            fclose(f1);
+            fclose(f2);
+            return 1;
+        }
+    }
+}
 
-    destroyList(gradeList);
+int main() {
+    generate_test_data(NUM_STUDENTS, NUM_PROJECTS, MIN_GRADES_PER_FILE, MAX_GRADE);
+
+    double seq_time = run_sequential("rezultate_seq.txt");
+    printf("Sequential: %.6f seconds\n", seq_time);
+
+    printf("Parallel:\n");
+    printf("---------------------------------------------------------------\n");
+    printf("Configuration        | Time (s)   | Speed_diff | Valid | T_seq/T_par\n");
+    printf("---------------------------------------------------------------\n");
+
+    int configs[][2] = {
+        {4, 1}, {4, 2},
+        {8, 1}, {8, 2},
+        {16, 1}, {16, 2}
+    };
+    int num_configs = 6;
+
+    for (int i = 0; i < num_configs; i++) {
+        int p = configs[i][0];
+        int p_r = configs[i][1];
+        int p_w = p - p_r;
+
+        double time = run_parallel(p, p_r, "rezultate.txt");
+
+        int valid = (compare_results("rezultate_seq.txt", "rezultate.txt") == 0);
+        double speed_diff = seq_time - time;
+        double ratio = seq_time / time;
+
+        printf("p=%2d, p_r=%d, p_w=%2d | %10.6f | %10.6f | %5s | %11.3f\n",
+               p, p_r, p_w, time, speed_diff, valid ? "OK" : "FAIL", ratio);
+
+        if (!valid) {
+            printf("  WARNING: Results do not match sequential output!\n");
+        }
+    }
     return 0;
 }

@@ -1,24 +1,21 @@
 CC = gcc
-CFLAGS = -Wall -O2
-LDFLAGS = -lrt
+CFLAGS = -Wall -O2 -pthread -I./src
+LDFLAGS = -lrt -lpthread
 
-all: sequential
+SRC = src/main.c src/list.c src/data_generator.c src/thread_safe_list.c \
+      src/queue.c src/sequential.c src/parallel.c
 
-sequential: src/main.c src/list.c
-	$(CC) $(CFLAGS) src/main.c -o sequential $(LDFLAGS)
+all: benchmark
+
+benchmark: $(SRC)
+	$(CC) $(CFLAGS) $(SRC) -o benchmark $(LDFLAGS)
 
 clean:
-	rm -f sequential
+	rm -f benchmark sequential
 	rm -rf data
-	rm -f rezultate.txt
+	rm -f *.txt
 
-generate:
-	python3 generate_data.py
+run: benchmark
+	./benchmark
 
-test: generate sequential
-	./sequential
-	@echo "\nResultate salvate in rezultate.txt"
-	@echo "Primele 10 linii din rezultate.txt:"
-	@head -10 rezultate.txt
-
-.PHONY: all clean generate test
+.PHONY: all clean run

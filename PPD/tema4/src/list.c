@@ -1,20 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-
-typedef struct {
-    int id;
-    int totalGrade;
-} Data;
-
-typedef struct Node {
-    Data data;
-    struct Node* next;
-} Node;
-
-typedef struct List {
-    Node* head;
-    Node* tail;
-} List;
+#include "list.h"
 
 List* createList() {
     List* list = malloc(sizeof(List));
