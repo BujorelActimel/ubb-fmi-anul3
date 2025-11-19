@@ -1,0 +1,4 @@
+*.db
+uploads/
+.env
+trail-logger
