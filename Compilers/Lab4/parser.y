@@ -31,8 +31,6 @@ void yyerror(const char *s);
 %nonassoc IF_NO_ELSE
 %nonassoc ELSE
 
-%expect 33
-
 %%
 
 program: PACKAGE IDENTIFIER package_imports declarations_opt function_declarations
