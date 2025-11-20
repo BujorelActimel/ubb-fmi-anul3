@@ -21,7 +21,6 @@ STRING      \"([^\"\n\\]|\\[ntr\\\"])*\"
 
 %%
 
-    /* Keywords */
 "package"       { column += yyleng; return PACKAGE; }
 "import"        { column += yyleng; return IMPORT; }
 "const"         { column += yyleng; return CONST; }
@@ -39,11 +38,9 @@ STRING      \"([^\"\n\\]|\\[ntr\\\"])*\"
 "string"        { column += yyleng; return STRING_TYPE; }
 "bool"          { column += yyleng; return BOOL; }
 
-    /* Special keywords */
 "fmt.Scanf"     { column += yyleng; return FMT_SCANF; }
 "fmt.Printf"    { column += yyleng; return FMT_PRINTF; }
 
-    /* Two-character operators (must come before single-character) */
 "&&"            { column += yyleng; return AND; }
 "||"            { column += yyleng; return OR; }
 "=="            { column += yyleng; return EQ; }
@@ -59,7 +56,6 @@ STRING      \"([^\"\n\\]|\\[ntr\\\"])*\"
 "++"            { column += yyleng; return INC; }
 "--"            { column += yyleng; return DEC; }
 
-    /* Single-character operators */
 "+"             { column += yyleng; return PLUS; }
 "-"             { column += yyleng; return MINUS; }
 "*"             { column += yyleng; return STAR; }
@@ -71,7 +67,6 @@ STRING      \"([^\"\n\\]|\\[ntr\\\"])*\"
 ">"             { column += yyleng; return GT; }
 "="             { column += yyleng; return ASSIGN; }
 
-    /* Delimiters */
 "("             { column += yyleng; return LPAREN; }
 ")"             { column += yyleng; return RPAREN; }
 "{"             { column += yyleng; return LBRACE; }
@@ -81,13 +76,11 @@ STRING      \"([^\"\n\\]|\\[ntr\\\"])*\"
 "."             { column += yyleng; return DOT; }
 ":"             { column += yyleng; return COLON; }
 
-    /* Literals */
 {IDENTIFIER}    { column += yyleng; return IDENTIFIER; }
 {INTEGER}       { column += yyleng; return INTEGER_CONST; }
 {FLOAT}         { column += yyleng; return FLOAT_CONST; }
 {STRING}        { column += yyleng; return STRING_LITERAL; }
 
-    /* Comments */
 "//".*\n        { column = 1; }
 "/*"([^*]|\*+[^*/])*\*+"/"  {
                     for (int i = 0; i < yyleng; i++) {
@@ -99,11 +92,9 @@ STRING      \"([^\"\n\\]|\\[ntr\\\"])*\"
                     }
                 }
 
-    /* Whitespace */
 \n              { column = 1; }
 [ \t\r]+        { column += yyleng; }
 
-    /* Error handling */
 .               {
                     fprintf(stderr, "Lexical error at line %d, column %d: illegal character '%s'\n",
                             yylineno, column, yytext);
