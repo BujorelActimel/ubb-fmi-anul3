@@ -60,6 +60,11 @@
 #define FLOAT 51
 #define STRING_LITERAL 52
 
+// ACTIVITATE
+#define REPETA 53
+#define PANACAND 54
+#define SFREPETA 55
+
 SymbolTable *symbol_table;
 FILE *fip_file;
 int column = 1;
@@ -99,6 +104,11 @@ STRING      \"([^\"\n\\]|\\[ntr\\\"])*\"
 "if"            { print_token(IF, yytext); add_to_fip(IF, -1); column += yyleng; return IF; }
 "else"          { print_token(ELSE, yytext); add_to_fip(ELSE, -1); column += yyleng; return ELSE; }
 "for"           { print_token(FOR, yytext); add_to_fip(FOR, -1); column += yyleng; return FOR; }
+
+"repeta"        { print_token(REPETA, yytext); add_to_fip(REPETA, -1); column += yyleng; return REPETA; }
+"panacand"      { print_token(PANACAND, yytext); add_to_fip(PANACAND, -1); column += yyleng; return PANACAND; }
+"sfrepeta"      { print_token(SFREPETA, yytext); add_to_fip(SFREPETA, -1); column += yyleng; return SFREPETA; }
+
 "int"           { print_token(INT, yytext); add_to_fip(INT, -1); column += yyleng; return INT; }
 "float32"       { print_token(FLOAT32, yytext); add_to_fip(FLOAT32, -1); column += yyleng; return FLOAT32; }
 "float64"       { print_token(FLOAT64, yytext); add_to_fip(FLOAT64, -1); column += yyleng; return FLOAT64; }

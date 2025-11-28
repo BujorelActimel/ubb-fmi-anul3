@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# Read config
-CONFIG_FILE="../app/config.json"
-SERVER_IP=$(grep -o '"serverIp": *"[^"]*"' "$CONFIG_FILE" | cut -d'"' -f4)
-API_URL="http://$SERVER_IP:8080"
+API_URL=https://hike-log-server-production.up.railway.app
 
 echo "Server: $API_URL"
 echo ""
@@ -34,7 +31,7 @@ echo "Fetching trails..."
 TRAILS=$(curl -s -X GET "$API_URL/api/trails" \
   -H "Authorization: Bearer $TOKEN")
 
-echo "$TRAILS" | grep -o '"id":[0-9]*,"name":"[^"]*"' | head -5
+echo "$TRAILS"
 echo ""
 
 # Get trail ID to update
