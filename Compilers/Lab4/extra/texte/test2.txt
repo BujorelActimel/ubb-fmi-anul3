@@ -1,0 +1,5 @@
+limbajul de programare este util pentru calculatoare
+studiem limbajelor moderne si 123 compilatoarele lor
+sintaxa limbajului include MAJUSCULE si caractere-speciale
+limbaje ca python! java@ si c# sunt populare
+parsarea limbaj necesita analiza lexicala

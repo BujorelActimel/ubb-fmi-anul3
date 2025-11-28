@@ -1,0 +1,5 @@
+alimbajul de programare este util pentru calculatoare
+studiem alimbajelor moderne si compilatoarele lor
+sintaxa alimbajului include majuscule si caractere speciale
+alimbaje ca python java si c sunt populare
+parsarea alimbaj necesita analiza lexicala
