@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'ppd.tema5'
+version = '1.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // SQLite JDBC driver for database bonus
+    implementation 'org.xerial:sqlite-jdbc:3.44.1.0'
+}
+
+application {
+    mainClass = 'Main'
+}
+
+tasks.named('run') {
+    standardInput = System.in
+}

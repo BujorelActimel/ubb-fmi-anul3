@@ -1,0 +1,7 @@
+#!/bin/bash
+
+mpic++ -Wall -Wextra -std=c++11 -o out src.cpp
+
+echo 5 | mpirun -N 4 --oversubscribe out
+
+# rm out
