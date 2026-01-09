@@ -1,0 +1,3 @@
+# Test input for g1_simple.txt
+# Should be accepted
+a a b b

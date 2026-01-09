@@ -1,0 +1,11 @@
+# Grammar with epsilon production
+# Tests FIRST/FOLLOW computation with nullable non-terminals
+# Non-terminals: S, A, B (uppercase)
+# Terminals: a, b, c (lowercase)
+# Start symbol: S (first production LHS)
+
+S -> A B c
+A -> a A
+A -> epsilon
+B -> b B
+B -> epsilon

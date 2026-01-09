@@ -1,0 +1,9 @@
+# Simple grammar for testing basic parsing
+# Language: a^n b^n (equal number of a's followed by b's)
+# Examples: ab, aabb, aaabbb
+# Non-terminals: S (uppercase)
+# Terminals: a, b (lowercase)
+# Start symbol: S (first production LHS)
+
+S -> a S b
+S -> a b

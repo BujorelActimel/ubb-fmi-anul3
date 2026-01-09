@@ -1,0 +1,3 @@
+# Test input for g2_arithmetic.txt
+# Expression: id + id * id
+id + id * id
