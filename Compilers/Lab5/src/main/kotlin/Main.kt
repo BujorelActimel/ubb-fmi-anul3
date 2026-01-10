@@ -19,16 +19,23 @@ fun main(args: Array<String>) {
 
     // Command-line mode selection
     when {
-        args[0] == "--test" -> {
+        args[0] == "--test-step1" -> {
             runStep1Tests()
+        }
+        args[0] == "--test-step2" -> {
+            runStep2Tests()
         }
         args[0] == "--check-slr" -> {
             // TODO: Check if grammar is SLR
             // checkIfSLR(args[1])
         }
         args[0] == "--first-follow" -> {
-            // TODO: Compute and display FIRST and FOLLOW sets
-            // showFirstFollow(args[1])
+            if (args.size >= 2) {
+                showFirstFollow(args[1])
+            } else {
+                println("Error: Missing grammar file argument")
+                printUsage()
+            }
         }
         args.size >= 2 -> {
             // TODO: Parse input sequence
@@ -420,10 +427,252 @@ fun checkIfSLR(grammarFile: String) {
  * ```
  */
 fun showFirstFollow(grammarFile: String) {
-    // TODO: Implement FIRST/FOLLOW display
-    println("Computing FIRST and FOLLOW sets for: $grammarFile")
+    println("=== Computing FIRST and FOLLOW Sets ===\n")
+    println("Grammar file: $grammarFile\n")
 
-    // TODO: Load grammar, compute sets, display
+    try {
+        val grammar = Grammar(grammarFile)
+        grammar.print()
+
+        // Compute FIRST sets
+        val firstSets = FirstSets(grammar)
+        firstSets.print()
+
+        // TODO: Step 3 - Compute FOLLOW sets
+        // val followSets = FollowSets(grammar, firstSets)
+        // followSets.print()
+    } catch (e: Exception) {
+        println("Error: ${e.message}")
+        e.printStackTrace()
+    }
+}
+
+/**
+ * Step 2: Test FIRST sets implementation
+ */
+fun runStep2Tests() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║   STEP 2: FIRST Sets Implementation Tests║")
+    println("╚═══════════════════════════════════════════╝\n")
+
+    var passedTests = 0
+    var totalTests = 0
+
+    // Test 1: Simple grammar without epsilon
+    println("━━━ Test 1: Arithmetic Grammar (No Epsilon) ━━━")
+    totalTests++
+    try {
+        val g1 = Grammar("grammars/g2_arithmetic.txt")
+        val firstSets = FirstSets(g1)
+
+        println("Grammar:")
+        g1.print()
+        println("FIRST Sets:")
+        firstSets.print()
+
+        // Verify FIRST sets
+        val expectedFirstE = setOf("(", "id")
+        val expectedFirstT = setOf("(", "id")
+        val expectedFirstF = setOf("(", "id")
+
+        val actualFirstE = firstSets.getFirst("E")
+        val actualFirstT = firstSets.getFirst("T")
+        val actualFirstF = firstSets.getFirst("F")
+
+        println("✓ Verification:")
+        println("  Expected FIRST(E) = $expectedFirstE")
+        println("  Actual FIRST(E) = $actualFirstE")
+        assert(actualFirstE == expectedFirstE) {
+            "FIRST(E) mismatch! Expected $expectedFirstE, got $actualFirstE"
+        }
+
+        println("  Expected FIRST(T) = $expectedFirstT")
+        println("  Actual FIRST(T) = $actualFirstT")
+        assert(actualFirstT == expectedFirstT) {
+            "FIRST(T) mismatch! Expected $expectedFirstT, got $actualFirstT"
+        }
+
+        println("  Expected FIRST(F) = $expectedFirstF")
+        println("  Actual FIRST(F) = $actualFirstF")
+        assert(actualFirstF == expectedFirstF) {
+            "FIRST(F) mismatch! Expected $expectedFirstF, got $actualFirstF"
+        }
+
+        // Test terminals
+        assert(firstSets.getFirst("+") == setOf("+")) { "FIRST(+) should be {+}" }
+        assert(firstSets.getFirst("id") == setOf("id")) { "FIRST(id) should be {id}" }
+
+        // Test epsilon derivation
+        assert(!firstSets.canDeriveEpsilon("E")) { "E should not derive epsilon" }
+        assert(!firstSets.canDeriveEpsilon("T")) { "T should not derive epsilon" }
+
+        println("  ✓ All FIRST sets correct")
+        println("  ✓ Epsilon derivation correct")
+        println("✅ Test 1 PASSED\n")
+        passedTests++
+    } catch (e: Exception) {
+        println("❌ Test 1 FAILED: ${e.message}\n")
+        e.printStackTrace()
+    }
+
+    // Test 2: Grammar with epsilon productions
+    println("━━━ Test 2: Grammar with Epsilon Productions ━━━")
+    totalTests++
+    try {
+        val g2 = Grammar("grammars/g3_with_epsilon.txt")
+        val firstSets = FirstSets(g2)
+
+        println("Grammar:")
+        g2.print()
+        println("FIRST Sets:")
+        firstSets.print()
+
+        // Verify FIRST sets with epsilon
+        val expectedFirstS = setOf("a", "b", "c")
+        val expectedFirstA = setOf("a", "ε")
+        val expectedFirstB = setOf("b", "ε")
+
+        val actualFirstS = firstSets.getFirst("S")
+        val actualFirstA = firstSets.getFirst("A")
+        val actualFirstB = firstSets.getFirst("B")
+
+        println("✓ Verification:")
+        println("  Expected FIRST(S) = $expectedFirstS")
+        println("  Actual FIRST(S) = $actualFirstS")
+        assert(actualFirstS == expectedFirstS) {
+            "FIRST(S) mismatch! Expected $expectedFirstS, got $actualFirstS"
+        }
+
+        println("  Expected FIRST(A) = $expectedFirstA")
+        println("  Actual FIRST(A) = $actualFirstA")
+        assert(actualFirstA == expectedFirstA) {
+            "FIRST(A) mismatch! Expected $expectedFirstA, got $actualFirstA"
+        }
+
+        println("  Expected FIRST(B) = $expectedFirstB")
+        println("  Actual FIRST(B) = $actualFirstB")
+        assert(actualFirstB == expectedFirstB) {
+            "FIRST(B) mismatch! Expected $expectedFirstB, got $actualFirstB"
+        }
+
+        // Test epsilon derivation
+        assert(firstSets.canDeriveEpsilon("A")) { "A should derive epsilon" }
+        assert(firstSets.canDeriveEpsilon("B")) { "B should derive epsilon" }
+        assert(!firstSets.canDeriveEpsilon("S")) { "S should not derive epsilon" }
+
+        println("  ✓ All FIRST sets with epsilon correct")
+        println("  ✓ Epsilon derivation detection correct")
+        println("✅ Test 2 PASSED\n")
+        passedTests++
+    } catch (e: Exception) {
+        println("❌ Test 2 FAILED: ${e.message}\n")
+        e.printStackTrace()
+    }
+
+    // Test 3: FIRST of string sequences
+    println("━━━ Test 3: FIRST of String Sequences ━━━")
+    totalTests++
+    try {
+        val g3 = Grammar("grammars/g3_with_epsilon.txt")
+        val firstSets = FirstSets(g3)
+
+        println("Testing firstOfString()...")
+
+        // Test: FIRST(A B c)
+        val seq1 = listOf("A", "B", "c")
+        val result1 = firstSets.firstOfString(seq1)
+        val expected1 = setOf("a", "b", "c")
+        println("  FIRST(A B c) = $result1")
+        println("  Expected: $expected1")
+        assert(result1 == expected1) {
+            "FIRST(A B c) mismatch! Expected $expected1, got $result1"
+        }
+
+        // Test: FIRST(A a)
+        val seq2 = listOf("A", "a")
+        val result2 = firstSets.firstOfString(seq2)
+        val expected2 = setOf("a")
+        println("  FIRST(A a) = $result2")
+        println("  Expected: $expected2")
+        assert(result2 == expected2) {
+            "FIRST(A a) mismatch! Expected $expected2, got $result2"
+        }
+
+        // Test: FIRST(c)
+        val seq3 = listOf("c")
+        val result3 = firstSets.firstOfString(seq3)
+        val expected3 = setOf("c")
+        println("  FIRST(c) = $result3")
+        println("  Expected: $expected3")
+        assert(result3 == expected3) {
+            "FIRST(c) mismatch! Expected $expected3, got $result3"
+        }
+
+        // Test: FIRST(A B) where both are nullable
+        val seq4 = listOf("A", "B")
+        val result4 = firstSets.firstOfString(seq4)
+        val expected4 = setOf("a", "b", "ε")
+        println("  FIRST(A B) = $result4")
+        println("  Expected: $expected4")
+        assert(result4 == expected4) {
+            "FIRST(A B) mismatch! Expected $expected4, got $result4"
+        }
+
+        println("  ✓ All firstOfString() tests correct")
+        println("✅ Test 3 PASSED\n")
+        passedTests++
+    } catch (e: Exception) {
+        println("❌ Test 3 FAILED: ${e.message}\n")
+        e.printStackTrace()
+    }
+
+    // Test 4: Simple grammar
+    println("━━━ Test 4: Simple Grammar (a^n b^n) ━━━")
+    totalTests++
+    try {
+        val g4 = Grammar("grammars/g1_simple.txt")
+        val firstSets = FirstSets(g4)
+
+        println("Grammar:")
+        g4.print()
+        println("FIRST Sets:")
+        firstSets.print()
+
+        val expectedFirstS = setOf("a")
+        val actualFirstS = firstSets.getFirst("S")
+
+        println("✓ Verification:")
+        println("  Expected FIRST(S) = $expectedFirstS")
+        println("  Actual FIRST(S) = $actualFirstS")
+        assert(actualFirstS == expectedFirstS) {
+            "FIRST(S) mismatch! Expected $expectedFirstS, got $actualFirstS"
+        }
+
+        assert(!firstSets.canDeriveEpsilon("S")) { "S should not derive epsilon" }
+
+        println("  ✓ FIRST(S) correct")
+        println("✅ Test 4 PASSED\n")
+        passedTests++
+    } catch (e: Exception) {
+        println("❌ Test 4 FAILED: ${e.message}\n")
+        e.printStackTrace()
+    }
+
+    // Summary
+    println("╔═══════════════════════════════════════════╗")
+    println("║          Step 2 Testing Complete          ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("\nResults: $passedTests/$totalTests tests passed")
+
+    if (passedTests == totalTests) {
+        println("\n🎉 Congratulations! All FIRST sets tests passed!")
+        println("✅ Step 2 is complete and working correctly.")
+        println("\n📚 You're ready for Step 3: FOLLOW sets computation")
+    } else {
+        println("\n⚠️  Some tests failed. Please fix the issues above.")
+        println("💡 Review FirstSets.kt implementation")
+    }
+    println()
 }
 
 /**
