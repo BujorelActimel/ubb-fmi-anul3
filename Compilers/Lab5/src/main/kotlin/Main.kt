@@ -25,6 +25,9 @@ fun main(args: Array<String>) {
         args[0] == "--test-step2" -> {
             runStep2Tests()
         }
+        args[0] == "--test-step3" -> {
+            runStep3Tests()
+        }
         args[0] == "--check-slr" -> {
             // TODO: Check if grammar is SLR
             // checkIfSLR(args[1])
@@ -438,9 +441,9 @@ fun showFirstFollow(grammarFile: String) {
         val firstSets = FirstSets(grammar)
         firstSets.print()
 
-        // TODO: Step 3 - Compute FOLLOW sets
-        // val followSets = FollowSets(grammar, firstSets)
-        // followSets.print()
+        // Compute FOLLOW sets
+        val followSets = FollowSets(grammar, firstSets)
+        followSets.print()
     } catch (e: Exception) {
         println("Error: ${e.message}")
         e.printStackTrace()
@@ -688,6 +691,163 @@ fun runStep2Tests() {
     } else {
         println("\n⚠️  Some tests failed. Please fix the issues above.")
         println("💡 Review FirstSets.kt implementation")
+    }
+    println()
+}
+
+/**
+ * Step 3: Test FOLLOW sets implementation
+ */
+fun runStep3Tests() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║  STEP 3: FOLLOW Sets Implementation Tests║")
+    println("╚═══════════════════════════════════════════╝\n")
+
+    var passedTests = 0
+    var totalTests = 0
+
+    // Test 1: Arithmetic grammar
+    println("━━━ Test 1: Arithmetic Grammar ━━━")
+    totalTests++
+    try {
+        val g1 = Grammar("grammars/g2_arithmetic.txt")
+        val firstSets = FirstSets(g1)
+        val followSets = FollowSets(g1, firstSets)
+
+        println("Grammar:")
+        g1.print()
+        println("FOLLOW Sets:")
+        followSets.print()
+
+        // Verify FOLLOW sets
+        val expectedFollowE = setOf("$", "+", ")")
+        val expectedFollowT = setOf("$", "+", "*", ")")
+        val expectedFollowF = setOf("$", "+", "*", ")")
+
+        val actualFollowE = followSets.getFollow("E")
+        val actualFollowT = followSets.getFollow("T")
+        val actualFollowF = followSets.getFollow("F")
+
+        println("✓ Verification:")
+        println("  Expected FOLLOW(E) = $expectedFollowE")
+        println("  Actual FOLLOW(E) = $actualFollowE")
+        check(actualFollowE == expectedFollowE) {
+            "FOLLOW(E) mismatch! Expected $expectedFollowE, got $actualFollowE"
+        }
+
+        println("  Expected FOLLOW(T) = $expectedFollowT")
+        println("  Actual FOLLOW(T) = $actualFollowT")
+        check(actualFollowT == expectedFollowT) {
+            "FOLLOW(T) mismatch! Expected $expectedFollowT, got $actualFollowT"
+        }
+
+        println("  Expected FOLLOW(F) = $expectedFollowF")
+        println("  Actual FOLLOW(F) = $actualFollowF")
+        check(actualFollowF == expectedFollowF) {
+            "FOLLOW(F) mismatch! Expected $expectedFollowF, got $actualFollowF"
+        }
+
+        println("  ✓ All FOLLOW sets correct")
+        println("✅ Test 1 PASSED\n")
+        passedTests++
+    } catch (e: Exception) {
+        println("❌ Test 1 FAILED: ${e.message}\n")
+        e.printStackTrace()
+    }
+
+    // Test 2: Grammar with epsilon
+    println("━━━ Test 2: Grammar with Epsilon Productions ━━━")
+    totalTests++
+    try {
+        val g2 = Grammar("grammars/g3_with_epsilon.txt")
+        val firstSets = FirstSets(g2)
+        val followSets = FollowSets(g2, firstSets)
+
+        println("Grammar:")
+        g2.print()
+        println("FOLLOW Sets:")
+        followSets.print()
+
+        // Verify FOLLOW sets with epsilon
+        val expectedFollowS = setOf("$")
+        val expectedFollowA = setOf("b", "c")  // A followed by B or c
+        val expectedFollowB = setOf("c")       // B followed by c
+
+        val actualFollowS = followSets.getFollow("S")
+        val actualFollowA = followSets.getFollow("A")
+        val actualFollowB = followSets.getFollow("B")
+
+        println("✓ Verification:")
+        println("  Expected FOLLOW(S) = $expectedFollowS")
+        println("  Actual FOLLOW(S) = $actualFollowS")
+        check(actualFollowS == expectedFollowS) {
+            "FOLLOW(S) mismatch! Expected $expectedFollowS, got $actualFollowS"
+        }
+
+        println("  Expected FOLLOW(A) = $expectedFollowA")
+        println("  Actual FOLLOW(A) = $actualFollowA")
+        check(actualFollowA == expectedFollowA) {
+            "FOLLOW(A) mismatch! Expected $expectedFollowA, got $actualFollowA"
+        }
+
+        println("  Expected FOLLOW(B) = $expectedFollowB")
+        println("  Actual FOLLOW(B) = $actualFollowB")
+        check(actualFollowB == expectedFollowB) {
+            "FOLLOW(B) mismatch! Expected $expectedFollowB, got $actualFollowB"
+        }
+
+        println("  ✓ All FOLLOW sets with epsilon correct")
+        println("✅ Test 2 PASSED\n")
+        passedTests++
+    } catch (e: Exception) {
+        println("❌ Test 2 FAILED: ${e.message}\n")
+        e.printStackTrace()
+    }
+
+    // Test 3: Simple grammar
+    println("━━━ Test 3: Simple Grammar (a^n b^n) ━━━")
+    totalTests++
+    try {
+        val g3 = Grammar("grammars/g1_simple.txt")
+        val firstSets = FirstSets(g3)
+        val followSets = FollowSets(g3, firstSets)
+
+        println("Grammar:")
+        g3.print()
+        println("FOLLOW Sets:")
+        followSets.print()
+
+        val expectedFollowS = setOf("$", "b")  // S can be followed by b (in S -> a S b)
+        val actualFollowS = followSets.getFollow("S")
+
+        println("✓ Verification:")
+        println("  Expected FOLLOW(S) = $expectedFollowS")
+        println("  Actual FOLLOW(S) = $actualFollowS")
+        check(actualFollowS == expectedFollowS) {
+            "FOLLOW(S) mismatch! Expected $expectedFollowS, got $actualFollowS"
+        }
+
+        println("  ✓ FOLLOW(S) correct")
+        println("✅ Test 3 PASSED\n")
+        passedTests++
+    } catch (e: Exception) {
+        println("❌ Test 3 FAILED: ${e.message}\n")
+        e.printStackTrace()
+    }
+
+    // Summary
+    println("╔═══════════════════════════════════════════╗")
+    println("║          Step 3 Testing Complete          ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("\nResults: $passedTests/$totalTests tests passed")
+
+    if (passedTests == totalTests) {
+        println("\n🎉 Congratulations! All FOLLOW sets tests passed!")
+        println("✅ Step 3 is complete and working correctly.")
+        println("\n📚 You're ready for Step 4: LR(0) items and canonical collection")
+    } else {
+        println("\n⚠️  Some tests failed. Please fix the issues above.")
+        println("💡 Review FollowSets.kt implementation")
     }
     println()
 }
