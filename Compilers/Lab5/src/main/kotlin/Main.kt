@@ -1,439 +1,151 @@
-/**
- * Main entry point for the SLR Parser implementation.
- *
- * This program implements an SLR (Simple LR) parser for syntax analysis.
- * It can:
- * 1. Parse an input sequence using a given CFG
- * 2. Verify if a grammar is SLR
- * 3. Generate parse trees or production sequences
- */
+import java.io.File
 
 fun main(args: Array<String>) {
-    println("=== SLR Parser - Tema 5 ===\n")
-
-    // If no arguments, run Step 1 tests
     if (args.isEmpty()) {
-        runStep1Tests()
+        printUsage()
         return
     }
 
-    // Command-line mode selection
-    when {
-        args[0] == "--test-step1" -> {
-            runStep1Tests()
-        }
-        args[0] == "--test-step2" -> {
-            runStep2Tests()
-        }
-        args[0] == "--test-step3" -> {
-            runStep3Tests()
-        }
-        args[0] == "--check-slr" -> {
-            // TODO: Check if grammar is SLR
-            // checkIfSLR(args[1])
-        }
-        args[0] == "--first-follow" -> {
-            if (args.size >= 2) {
-                showFirstFollow(args[1])
-            } else {
+    when (args[0]) {
+        "--check-slr" -> {
+            if (args.size < 2) {
                 println("Error: Missing grammar file argument")
                 printUsage()
+                return
             }
+            checkIfSLR(args[1])
         }
-        args.size >= 2 -> {
-            // TODO: Parse input sequence
-            // parseInput(args[0], args[1])
+        "--first-follow" -> {
+            if (args.size < 2) {
+                println("Error: Missing grammar file argument")
+                printUsage()
+                return
+            }
+            showFirstFollow(args[1])
         }
-        else -> {
+        "--help" -> {
             printUsage()
         }
-    }
-}
-
-/**
- * Step 1: Test Grammar class implementation
- */
-fun runStep1Tests() {
-    println("╔═══════════════════════════════════════════╗")
-    println("║   STEP 1: Grammar Implementation Tests   ║")
-    println("╚═══════════════════════════════════════════╝\n")
-
-    var passedTests = 0
-    var totalTests = 0
-
-    // Test 1: Simple grammar (g1)
-    println("━━━ Test 1: Simple Grammar (a^n b^n) ━━━")
-    totalTests++
-    try {
-        val g1 = Grammar("grammars/g1_simple.txt")
-        g1.print()
-
-        // Verify deduction
-        println("✓ Verification:")
-        println("  Non-terminals: ${g1.nonTerminals}")
-        println("  Terminals: ${g1.terminals}")
-        println("  Start symbol: ${g1.startSymbol}")
-
-        // Test symbol classification
-        check(g1.isNonTerminal("S")) { "S should be non-terminal" }
-        check(g1.isTerminal("a")) { "a should be terminal" }
-        check(g1.isTerminal("b")) { "b should be terminal" }
-        check(!g1.isTerminal("S")) { "S should NOT be terminal" }
-        check(!g1.isNonTerminal("a")) { "a should NOT be non-terminal" }
-        println("  ✓ Symbol classification works correctly")
-
-        // Test getProductionsFor
-        val sProductions = g1.getProductionsFor("S")
-        println("  Productions for S: ${sProductions.size}")
-        sProductions.forEach { println("    - $it") }
-        check(sProductions.size == 2) { "S should have 2 productions" }
-        println("  ✓ getProductionsFor() works correctly")
-
-        println("✅ Test 1 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 1 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Test 2: Arithmetic expression grammar (g2)
-    println("━━━ Test 2: Arithmetic Expression Grammar ━━━")
-    totalTests++
-    try {
-        val g2 = Grammar("grammars/g2_arithmetic.txt")
-        g2.print()
-
-        // Verify correct classification
-        val expectedNonTerminals = setOf("E", "T", "F")
-        val expectedTerminals = setOf("+", "*", "(", ")", "id")
-
-        println("✓ Verification:")
-        println("  Expected non-terminals: $expectedNonTerminals")
-        println("  Found non-terminals: ${g2.nonTerminals}")
-        println("  Expected terminals: $expectedTerminals")
-        println("  Found terminals: ${g2.terminals}")
-
-        check(g2.nonTerminals == expectedNonTerminals) {
-            "Non-terminals mismatch! Expected $expectedNonTerminals, got ${g2.nonTerminals}"
-        }
-        check(g2.terminals == expectedTerminals) {
-            "Terminals mismatch! Expected $expectedTerminals, got ${g2.terminals}"
-        }
-        check(g2.startSymbol == "E") { "Start symbol should be E" }
-
-        println("  ✓ All symbols classified correctly")
-
-        // Test each non-terminal's productions
-        println("\n  Productions by non-terminal:")
-        for (nt in expectedNonTerminals.sorted()) {
-            val prods = g2.getProductionsFor(nt)
-            println("    $nt: ${prods.size} production(s)")
-            prods.forEach { println("      - $it") }
-        }
-
-        // Test terminal checks
-        check(g2.isTerminal("+")) { "+ should be terminal" }
-        check(g2.isNonTerminal("E")) { "E should be non-terminal" }
-        check(!g2.isTerminal("E")) { "E should NOT be terminal" }
-
-        println("\n✅ Test 2 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 2 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Test 3: Grammar with epsilon productions (g3)
-    println("━━━ Test 3: Grammar with Epsilon Productions ━━━")
-    totalTests++
-    try {
-        val g3 = Grammar("grammars/g3_with_epsilon.txt")
-        g3.print()
-
-        // Find and verify epsilon productions
-        val epsilonProductions = g3.productions.filter { it.isEpsilon() }
-        println("✓ Epsilon productions found: ${epsilonProductions.size}")
-        epsilonProductions.forEach { println("  - $it") }
-
-        check(epsilonProductions.size == 2) {
-            "Should have 2 epsilon productions, found ${epsilonProductions.size}"
-        }
-
-        // Verify specific epsilon productions
-        val aProductions = g3.getProductionsFor("A")
-        val bProductions = g3.getProductionsFor("B")
-        val aEpsilon = aProductions.any { it.isEpsilon() }
-        val bEpsilon = bProductions.any { it.isEpsilon() }
-
-        check(aEpsilon) { "A should have epsilon production" }
-        check(bEpsilon) { "B should have epsilon production" }
-        println("  ✓ Epsilon productions detected correctly")
-
-        // Verify non-epsilon productions
-        val nonEpsilonProds = g3.productions.filter { !it.isEpsilon() }
-        println("  Non-epsilon productions: ${nonEpsilonProds.size}")
-        nonEpsilonProds.forEach { println("    - $it") }
-
-        println("✅ Test 3 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 3 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Test 4: Grammar augmentation
-    println("━━━ Test 4: Grammar Augmentation ━━━")
-    totalTests++
-    try {
-        val g4 = Grammar("grammars/g2_arithmetic.txt")
-        println("Before augmentation:")
-        println("  Start symbol: ${g4.startSymbol}")
-        println("  Productions: ${g4.productions.size}")
-        println("  First production: ${g4.productions[0]}")
-        println("  Non-terminals: ${g4.nonTerminals}")
-
-        g4.augmentGrammar()
-
-        println("\nAfter augmentation:")
-        println("  Start symbol: ${g4.startSymbol}")
-        println("  Productions: ${g4.productions.size}")
-        println("  First production: ${g4.productions[0]}")
-        println("  Non-terminals: ${g4.nonTerminals}")
-
-        // Verify augmentation
-        check(g4.startSymbol == "E'") { "Start symbol should be E', got ${g4.startSymbol}" }
-        check(g4.productions[0].lhs == "E'") { "First production LHS should be E'" }
-        check(g4.productions[0].rhs == listOf("E")) { "Augmented production RHS should be [E]" }
-        check(g4.isNonTerminal("E'")) { "E' should be recognized as non-terminal" }
-        check(!g4.isTerminal("E'")) { "E' should NOT be terminal" }
-
-        // Verify original productions still exist
-        val eProds = g4.getProductionsFor("E")
-        check(eProds.isNotEmpty()) { "Original E productions should still exist" }
-
-        println("\n  ✓ Grammar augmented correctly")
-        println("  ✓ Augmented start symbol recognized as non-terminal")
-        println("✅ Test 4 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 4 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Test 5: Edge cases
-    println("━━━ Test 5: Edge Cases ━━━")
-    totalTests++
-    try {
-        val g5 = Grammar("grammars/g1_simple.txt")
-
-        // Test with non-existent non-terminal
-        val emptyProds = g5.getProductionsFor("X")
-        check(emptyProds.isEmpty()) { "Non-existent non-terminal should return empty list" }
-        println("  ✓ getProductionsFor() handles non-existent non-terminal")
-
-        // Test symbol classification with invalid symbols
-        check(!g5.isTerminal("INVALID")) { "Unknown symbol should not be terminal" }
-        check(!g5.isNonTerminal("invalid")) { "Unknown symbol should not be non-terminal" }
-        println("  ✓ Symbol classification handles unknown symbols")
-
-        // Test that all productions have valid LHS
-        g5.productions.forEach { prod ->
-            check(g5.isNonTerminal(prod.lhs)) {
-                "Production LHS ${prod.lhs} should be a non-terminal"
+        else -> {
+            // Default: parse input sequence
+            if (args.size < 2) {
+                println("Error: Missing input file argument")
+                printUsage()
+                return
             }
+            parseInput(args[0], args[1])
         }
-        println("  ✓ All production LHS are non-terminals")
+    }
+}
 
-        // Test that start symbol is a non-terminal
-        check(g5.isNonTerminal(g5.startSymbol)) {
-            "Start symbol should be a non-terminal"
+fun parseInput(grammarFile: String, inputFile: String) {
+    try {
+        println("=== SLR Parser ===\n")
+        println("Grammar file: $grammarFile")
+        println("Input file: $inputFile\n")
+
+        // Load grammar
+        val grammar = Grammar(grammarFile)
+
+        // Augment grammar
+        grammar.augmentGrammar()
+
+        // Compute FIRST and FOLLOW sets
+        val firstSets = FirstSets(grammar)
+        val followSets = FollowSets(grammar, firstSets)
+
+        // Build LR(0) automaton
+        val automaton = LRAutomaton(grammar, firstSets)
+
+        // Build SLR parsing table
+        val slrTable = SLRTable(grammar, automaton, followSets)
+
+        // Check if grammar is SLR
+        if (!slrTable.isSLR()) {
+            println("ERROR: Grammar is not SLR!")
+            println("Conflicts found:")
+            for (conflict in slrTable.getConflicts()) {
+                println(conflict)
+            }
+            return
         }
-        println("  ✓ Start symbol is a non-terminal")
 
-        println("✅ Test 5 PASSED\n")
-        passedTests++
+        // Create parser
+        val parser = SLRParser(grammar, slrTable)
+
+        // Read input
+        val input = File(inputFile).readText().trim()
+
+        // Parse input
+        val result = parser.parse(input)
+
+        // Display results
+        println(result)
+
     } catch (e: Exception) {
-        println("❌ Test 5 FAILED: ${e.message}\n")
+        println("Error: ${e.message}")
         e.printStackTrace()
     }
-
-    // Summary
-    println("╔═══════════════════════════════════════════╗")
-    println("║          Step 1 Testing Complete          ║")
-    println("╚═══════════════════════════════════════════╝")
-    println("\nResults: $passedTests/$totalTests tests passed")
-
-    if (passedTests == totalTests) {
-        println("\n🎉 Congratulations! All tests passed!")
-        println("✅ Step 1 is complete and working correctly.")
-        println("\n📚 You're ready for Step 2: FIRST sets computation")
-        println("   Run: ./gradlew run --args=\"--help\" for next steps")
-    } else {
-        println("\n⚠️  Some tests failed. Please fix the issues above.")
-        println("💡 Review Grammar.kt implementation")
-    }
-    println()
 }
 
 /**
- * TODO: Parse an input sequence using the given grammar.
- *
- * Purpose: Main parsing functionality - read grammar and input, build parser,
- * and parse the input sequence.
- *
- * Algorithm:
- * 1. Load grammar from file
- * 2. Augment the grammar (add S' -> S)
- * 3. Build SLR parser tables (Action and Goto)
- * 4. Read input sequence from file
- * 5. Parse the input using the SLR algorithm
- * 6. Output:
- *    - Parse tree (derivation tree)
- *    - OR sequence of productions used
- *    - OR error message if input is rejected
- *
- * @param grammarFile Path to grammar file
- * @param inputFile Path to input sequence file
- *
- * Example output for valid input:
- * ```
- * Input: id + id * id
- * Status: ACCEPTED
- *
- * Productions used:
- * 1. E -> E + T
- * 2. E -> T
- * 3. T -> T * F
- * 4. T -> F
- * 5. F -> id
- * ```
- *
- * Example output for invalid input:
- * ```
- * Input: id + + id
- * Status: REJECTED
- * Error: Unexpected token '+' at position 2
- * ```
- */
-fun parseInput(grammarFile: String, inputFile: String) {
-    // TODO: Implement parsing functionality
-    println("Parsing input file: $inputFile")
-    println("Using grammar: $grammarFile")
-
-    // Step 1: Load and parse grammar
-    // val grammar = Grammar(grammarFile)
-    // grammar.print()
-
-    // Step 2: Augment grammar
-    // grammar.augmentGrammar()
-
-    // Step 3: Compute FIRST and FOLLOW sets
-    // val firstSets = computeFirst(grammar)
-    // val followSets = computeFollow(grammar, firstSets)
-
-    // Step 4: Build LR(0) canonical collection
-    // val items = buildCanonicalCollection(grammar)
-
-    // Step 5: Build SLR parsing tables
-    // val parsingTable = buildSLRTable(grammar, items, followSets)
-
-    // Step 6: Check if grammar is SLR (no conflicts)
-    // if (!parsingTable.isSLR()) {
-    //     println("ERROR: Grammar is not SLR!")
-    //     parsingTable.printConflicts()
-    //     return
-    // }
-
-    // Step 7: Read input sequence
-    // val input = readInput(inputFile)
-
-    // Step 8: Parse the input
-    // val result = parse(grammar, parsingTable, input)
-
-    // Step 9: Display results
-    // result.print()
-}
-
-/**
- * TODO: Check if a grammar is SLR.
- *
- * Purpose: Verify whether a given grammar satisfies SLR conditions.
- * A grammar is SLR if there are no shift-reduce or reduce-reduce conflicts
- * when building the SLR parsing table.
- *
- * Algorithm:
- * 1. Load grammar
- * 2. Augment grammar
- * 3. Compute FIRST and FOLLOW sets
- * 4. Build canonical LR(0) collection
- * 5. Attempt to build SLR table
- * 6. Check for conflicts:
- *    - Shift-reduce conflict: when same state has both shift and reduce actions for same terminal
- *    - Reduce-reduce conflict: when same state has multiple reduce actions for same terminal
- * 7. Report results
- *
- * @param grammarFile Path to grammar file
- *
- * Output format:
- * ```
- * Grammar: g2_arithmetic.txt
- * Status: SLR ✓
- *
- * FIRST sets: ...
- * FOLLOW sets: ...
- * Number of states: 12
- * ```
- *
- * Or if not SLR:
- * ```
- * Grammar: bad_grammar.txt
- * Status: NOT SLR ✗
- *
- * Conflicts found:
- * State 5: Shift-reduce conflict on terminal '+'
- *   - Shift to state 7
- *   - Reduce by production E -> T
- * ```
+ * Check if a grammar is SLR.
  */
 fun checkIfSLR(grammarFile: String) {
-    // TODO: Implement SLR checking
-    println("Checking if grammar is SLR: $grammarFile")
+    try {
+        println("=== Checking if Grammar is SLR ===\n")
+        println("Grammar file: $grammarFile\n")
 
-    // TODO: Load grammar, build parser, check for conflicts
+        // Load grammar
+        val grammar = Grammar(grammarFile)
+        grammar.print()
+
+        // Augment grammar
+        grammar.augmentGrammar()
+
+        // Compute FIRST and FOLLOW sets
+        val firstSets = FirstSets(grammar)
+        val followSets = FollowSets(grammar, firstSets)
+
+        // Print FIRST and FOLLOW sets
+        firstSets.print()
+        followSets.print()
+
+        // Build LR(0) automaton
+        val automaton = LRAutomaton(grammar, firstSets)
+        println("Number of states: ${automaton.getStates().size}")
+        println("Number of transitions: ${automaton.getAllTransitions().size}\n")
+
+        // Build SLR parsing table
+        val slrTable = SLRTable(grammar, automaton, followSets)
+
+        // Check for conflicts
+        if (slrTable.isSLR()) {
+            println("✓ Grammar is SLR (no conflicts)\n")
+            slrTable.print()
+        } else {
+            println("✗ Grammar is NOT SLR\n")
+            println("Conflicts found:")
+            for (conflict in slrTable.getConflicts()) {
+                println(conflict)
+                println()
+            }
+        }
+
+    } catch (e: Exception) {
+        println("Error: ${e.message}")
+        e.printStackTrace()
+    }
 }
 
 /**
- * TODO: Compute and display FIRST and FOLLOW sets for the grammar.
- *
- * Purpose: Show the computed FIRST and FOLLOW sets for each non-terminal.
- * Useful for understanding the grammar and debugging parser issues.
- *
- * Algorithm:
- * 1. Load grammar
- * 2. Compute FIRST sets for all non-terminals
- * 3. Compute FOLLOW sets for all non-terminals
- * 4. Display in readable format
- *
- * @param grammarFile Path to grammar file
- *
- * Output format:
- * ```
- * FIRST sets:
- * E: { (, id }
- * T: { (, id }
- * F: { (, id }
- *
- * FOLLOW sets:
- * E: { $, +, ) }
- * T: { $, +, *, ) }
- * F: { $, +, *, ) }
- * ```
+ * Compute and display FIRST and FOLLOW sets for the grammar.
  */
 fun showFirstFollow(grammarFile: String) {
-    println("=== Computing FIRST and FOLLOW Sets ===\n")
-    println("Grammar file: $grammarFile\n")
-
     try {
+        println("=== Computing FIRST and FOLLOW Sets ===\n")
+        println("Grammar file: $grammarFile\n")
+
         val grammar = Grammar(grammarFile)
         grammar.print()
 
@@ -444,412 +156,11 @@ fun showFirstFollow(grammarFile: String) {
         // Compute FOLLOW sets
         val followSets = FollowSets(grammar, firstSets)
         followSets.print()
+
     } catch (e: Exception) {
         println("Error: ${e.message}")
         e.printStackTrace()
     }
-}
-
-// Note: We use check() instead of check() because check() is disabled by default in JVM
-
-/**
- * Step 2: Test FIRST sets implementation
- */
-fun runStep2Tests() {
-    println("╔═══════════════════════════════════════════╗")
-    println("║   STEP 2: FIRST Sets Implementation Tests║")
-    println("╚═══════════════════════════════════════════╝\n")
-
-    var passedTests = 0
-    var totalTests = 0
-
-    // Test 1: Simple grammar without epsilon
-    println("━━━ Test 1: Arithmetic Grammar (No Epsilon) ━━━")
-    totalTests++
-    try {
-        val g1 = Grammar("grammars/g2_arithmetic.txt")
-        val firstSets = FirstSets(g1)
-
-        println("Grammar:")
-        g1.print()
-        println("FIRST Sets:")
-        firstSets.print()
-
-        // Verify FIRST sets
-        val expectedFirstE = setOf("(", "id")
-        val expectedFirstT = setOf("(", "id")
-        val expectedFirstF = setOf("(", "id")
-
-        val actualFirstE = firstSets.getFirst("E")
-        val actualFirstT = firstSets.getFirst("T")
-        val actualFirstF = firstSets.getFirst("F")
-
-        println("✓ Verification:")
-        println("  Expected FIRST(E) = $expectedFirstE")
-        println("  Actual FIRST(E) = $actualFirstE")
-        check(actualFirstE == expectedFirstE) {
-            "FIRST(E) mismatch! Expected $expectedFirstE, got $actualFirstE"
-        }
-
-        println("  Expected FIRST(T) = $expectedFirstT")
-        println("  Actual FIRST(T) = $actualFirstT")
-        check(actualFirstT == expectedFirstT) {
-            "FIRST(T) mismatch! Expected $expectedFirstT, got $actualFirstT"
-        }
-
-        println("  Expected FIRST(F) = $expectedFirstF")
-        println("  Actual FIRST(F) = $actualFirstF")
-        check(actualFirstF == expectedFirstF) {
-            "FIRST(F) mismatch! Expected $expectedFirstF, got $actualFirstF"
-        }
-
-        // Test terminals
-        check(firstSets.getFirst("+") == setOf("+")) { "FIRST(+) should be {+}" }
-        check(firstSets.getFirst("id") == setOf("id")) { "FIRST(id) should be {id}" }
-
-        // Test epsilon derivation
-        check(!firstSets.canDeriveEpsilon("E")) { "E should not derive epsilon" }
-        check(!firstSets.canDeriveEpsilon("T")) { "T should not derive epsilon" }
-
-        println("  ✓ All FIRST sets correct")
-        println("  ✓ Epsilon derivation correct")
-        println("✅ Test 1 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 1 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Test 2: Grammar with epsilon productions
-    println("━━━ Test 2: Grammar with Epsilon Productions ━━━")
-    totalTests++
-    try {
-        val g2 = Grammar("grammars/g3_with_epsilon.txt")
-        val firstSets = FirstSets(g2)
-
-        println("Grammar:")
-        g2.print()
-        println("FIRST Sets:")
-        firstSets.print()
-
-        // Verify FIRST sets (no epsilon - that's tracked separately in nullable)
-        val expectedFirstS = setOf("a", "b", "c")
-        val expectedFirstA = setOf("a")  // ε tracked in nullable, not FIRST
-        val expectedFirstB = setOf("b")  // ε tracked in nullable, not FIRST
-
-        val actualFirstS = firstSets.getFirst("S")
-        val actualFirstA = firstSets.getFirst("A")
-        val actualFirstB = firstSets.getFirst("B")
-
-        println("✓ Verification:")
-        println("  Expected FIRST(S) = $expectedFirstS")
-        println("  Actual FIRST(S) = $actualFirstS")
-        check(actualFirstS == expectedFirstS) {
-            "FIRST(S) mismatch! Expected $expectedFirstS, got $actualFirstS"
-        }
-
-        println("  Expected FIRST(A) = $expectedFirstA")
-        println("  Actual FIRST(A) = $actualFirstA")
-        check(actualFirstA == expectedFirstA) {
-            "FIRST(A) mismatch! Expected $expectedFirstA, got $actualFirstA"
-        }
-
-        println("  Expected FIRST(B) = $expectedFirstB")
-        println("  Actual FIRST(B) = $actualFirstB")
-        check(actualFirstB == expectedFirstB) {
-            "FIRST(B) mismatch! Expected $expectedFirstB, got $actualFirstB"
-        }
-
-        // Test epsilon derivation
-        check(firstSets.canDeriveEpsilon("A")) { "A should derive epsilon" }
-        check(firstSets.canDeriveEpsilon("B")) { "B should derive epsilon" }
-        check(!firstSets.canDeriveEpsilon("S")) { "S should not derive epsilon" }
-
-        println("  ✓ All FIRST sets with epsilon correct")
-        println("  ✓ Epsilon derivation detection correct")
-        println("✅ Test 2 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 2 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Test 3: FIRST of string sequences
-    println("━━━ Test 3: FIRST of String Sequences ━━━")
-    totalTests++
-    try {
-        val g3 = Grammar("grammars/g3_with_epsilon.txt")
-        val firstSets = FirstSets(g3)
-
-        println("Testing firstOfString()...")
-
-        // Test: FIRST(A B c)
-        val seq1 = listOf("A", "B", "c")
-        val result1 = firstSets.firstOfString(seq1)
-        val expected1 = setOf("a", "b", "c")
-        println("  FIRST(A B c) = $result1")
-        println("  Expected: $expected1")
-        check(result1 == expected1) {
-            "FIRST(A B c) mismatch! Expected $expected1, got $result1"
-        }
-
-        // Test: FIRST(A a)
-        val seq2 = listOf("A", "a")
-        val result2 = firstSets.firstOfString(seq2)
-        val expected2 = setOf("a")
-        println("  FIRST(A a) = $result2")
-        println("  Expected: $expected2")
-        check(result2 == expected2) {
-            "FIRST(A a) mismatch! Expected $expected2, got $result2"
-        }
-
-        // Test: FIRST(c)
-        val seq3 = listOf("c")
-        val result3 = firstSets.firstOfString(seq3)
-        val expected3 = setOf("c")
-        println("  FIRST(c) = $result3")
-        println("  Expected: $expected3")
-        check(result3 == expected3) {
-            "FIRST(c) mismatch! Expected $expected3, got $result3"
-        }
-
-        // Test: FIRST(A B) where both are nullable
-        val seq4 = listOf("A", "B")
-        val result4 = firstSets.firstOfString(seq4)
-        // Both nullable - but NO ε in result, only terminals
-        val expected4 = setOf("a", "b")  // NO ε - nullable tracked separately
-        println("  FIRST(A B) = $result4")
-        println("  Expected: $expected4")
-        check(result4 == expected4) {
-            "FIRST(A B) mismatch! Expected $expected4, got $result4"
-        }
-
-        println("  ✓ All firstOfString() tests correct")
-
-        // Test canDeriveEpsilonFromSequence
-        println("\n  Testing canDeriveEpsilonFromSequence()...")
-        check(firstSets.canDeriveEpsilonFromSequence(listOf("A", "B"))) {
-            "Sequence [A, B] should be nullable (both are nullable)"
-        }
-        check(!firstSets.canDeriveEpsilonFromSequence(listOf("A", "c"))) {
-            "Sequence [A, c] should NOT be nullable (c is not nullable)"
-        }
-        check(firstSets.canDeriveEpsilonFromSequence(emptyList())) {
-            "Empty sequence should be nullable"
-        }
-        println("  ✓ canDeriveEpsilonFromSequence() correct")
-
-        println("✅ Test 3 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 3 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Test 4: Simple grammar
-    println("━━━ Test 4: Simple Grammar (a^n b^n) ━━━")
-    totalTests++
-    try {
-        val g4 = Grammar("grammars/g1_simple.txt")
-        val firstSets = FirstSets(g4)
-
-        println("Grammar:")
-        g4.print()
-        println("FIRST Sets:")
-        firstSets.print()
-
-        val expectedFirstS = setOf("a")
-        val actualFirstS = firstSets.getFirst("S")
-
-        println("✓ Verification:")
-        println("  Expected FIRST(S) = $expectedFirstS")
-        println("  Actual FIRST(S) = $actualFirstS")
-        check(actualFirstS == expectedFirstS) {
-            "FIRST(S) mismatch! Expected $expectedFirstS, got $actualFirstS"
-        }
-
-        check(!firstSets.canDeriveEpsilon("S")) { "S should not derive epsilon" }
-
-        println("  ✓ FIRST(S) correct")
-        println("✅ Test 4 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 4 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Summary
-    println("╔═══════════════════════════════════════════╗")
-    println("║          Step 2 Testing Complete          ║")
-    println("╚═══════════════════════════════════════════╝")
-    println("\nResults: $passedTests/$totalTests tests passed")
-
-    if (passedTests == totalTests) {
-        println("\n🎉 Congratulations! All FIRST sets tests passed!")
-        println("✅ Step 2 is complete and working correctly.")
-        println("\n📚 You're ready for Step 3: FOLLOW sets computation")
-    } else {
-        println("\n⚠️  Some tests failed. Please fix the issues above.")
-        println("💡 Review FirstSets.kt implementation")
-    }
-    println()
-}
-
-/**
- * Step 3: Test FOLLOW sets implementation
- */
-fun runStep3Tests() {
-    println("╔═══════════════════════════════════════════╗")
-    println("║  STEP 3: FOLLOW Sets Implementation Tests║")
-    println("╚═══════════════════════════════════════════╝\n")
-
-    var passedTests = 0
-    var totalTests = 0
-
-    // Test 1: Arithmetic grammar
-    println("━━━ Test 1: Arithmetic Grammar ━━━")
-    totalTests++
-    try {
-        val g1 = Grammar("grammars/g2_arithmetic.txt")
-        val firstSets = FirstSets(g1)
-        val followSets = FollowSets(g1, firstSets)
-
-        println("Grammar:")
-        g1.print()
-        println("FOLLOW Sets:")
-        followSets.print()
-
-        // Verify FOLLOW sets
-        val expectedFollowE = setOf("$", "+", ")")
-        val expectedFollowT = setOf("$", "+", "*", ")")
-        val expectedFollowF = setOf("$", "+", "*", ")")
-
-        val actualFollowE = followSets.getFollow("E")
-        val actualFollowT = followSets.getFollow("T")
-        val actualFollowF = followSets.getFollow("F")
-
-        println("✓ Verification:")
-        println("  Expected FOLLOW(E) = $expectedFollowE")
-        println("  Actual FOLLOW(E) = $actualFollowE")
-        check(actualFollowE == expectedFollowE) {
-            "FOLLOW(E) mismatch! Expected $expectedFollowE, got $actualFollowE"
-        }
-
-        println("  Expected FOLLOW(T) = $expectedFollowT")
-        println("  Actual FOLLOW(T) = $actualFollowT")
-        check(actualFollowT == expectedFollowT) {
-            "FOLLOW(T) mismatch! Expected $expectedFollowT, got $actualFollowT"
-        }
-
-        println("  Expected FOLLOW(F) = $expectedFollowF")
-        println("  Actual FOLLOW(F) = $actualFollowF")
-        check(actualFollowF == expectedFollowF) {
-            "FOLLOW(F) mismatch! Expected $expectedFollowF, got $actualFollowF"
-        }
-
-        println("  ✓ All FOLLOW sets correct")
-        println("✅ Test 1 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 1 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Test 2: Grammar with epsilon
-    println("━━━ Test 2: Grammar with Epsilon Productions ━━━")
-    totalTests++
-    try {
-        val g2 = Grammar("grammars/g3_with_epsilon.txt")
-        val firstSets = FirstSets(g2)
-        val followSets = FollowSets(g2, firstSets)
-
-        println("Grammar:")
-        g2.print()
-        println("FOLLOW Sets:")
-        followSets.print()
-
-        // Verify FOLLOW sets with epsilon
-        val expectedFollowS = setOf("$")
-        val expectedFollowA = setOf("b", "c")  // A followed by B or c
-        val expectedFollowB = setOf("c")       // B followed by c
-
-        val actualFollowS = followSets.getFollow("S")
-        val actualFollowA = followSets.getFollow("A")
-        val actualFollowB = followSets.getFollow("B")
-
-        println("✓ Verification:")
-        println("  Expected FOLLOW(S) = $expectedFollowS")
-        println("  Actual FOLLOW(S) = $actualFollowS")
-        check(actualFollowS == expectedFollowS) {
-            "FOLLOW(S) mismatch! Expected $expectedFollowS, got $actualFollowS"
-        }
-
-        println("  Expected FOLLOW(A) = $expectedFollowA")
-        println("  Actual FOLLOW(A) = $actualFollowA")
-        check(actualFollowA == expectedFollowA) {
-            "FOLLOW(A) mismatch! Expected $expectedFollowA, got $actualFollowA"
-        }
-
-        println("  Expected FOLLOW(B) = $expectedFollowB")
-        println("  Actual FOLLOW(B) = $actualFollowB")
-        check(actualFollowB == expectedFollowB) {
-            "FOLLOW(B) mismatch! Expected $expectedFollowB, got $actualFollowB"
-        }
-
-        println("  ✓ All FOLLOW sets with epsilon correct")
-        println("✅ Test 2 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 2 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Test 3: Simple grammar
-    println("━━━ Test 3: Simple Grammar (a^n b^n) ━━━")
-    totalTests++
-    try {
-        val g3 = Grammar("grammars/g1_simple.txt")
-        val firstSets = FirstSets(g3)
-        val followSets = FollowSets(g3, firstSets)
-
-        println("Grammar:")
-        g3.print()
-        println("FOLLOW Sets:")
-        followSets.print()
-
-        val expectedFollowS = setOf("$", "b")  // S can be followed by b (in S -> a S b)
-        val actualFollowS = followSets.getFollow("S")
-
-        println("✓ Verification:")
-        println("  Expected FOLLOW(S) = $expectedFollowS")
-        println("  Actual FOLLOW(S) = $actualFollowS")
-        check(actualFollowS == expectedFollowS) {
-            "FOLLOW(S) mismatch! Expected $expectedFollowS, got $actualFollowS"
-        }
-
-        println("  ✓ FOLLOW(S) correct")
-        println("✅ Test 3 PASSED\n")
-        passedTests++
-    } catch (e: Exception) {
-        println("❌ Test 3 FAILED: ${e.message}\n")
-        e.printStackTrace()
-    }
-
-    // Summary
-    println("╔═══════════════════════════════════════════╗")
-    println("║          Step 3 Testing Complete          ║")
-    println("╚═══════════════════════════════════════════╝")
-    println("\nResults: $passedTests/$totalTests tests passed")
-
-    if (passedTests == totalTests) {
-        println("\n🎉 Congratulations! All FOLLOW sets tests passed!")
-        println("✅ Step 3 is complete and working correctly.")
-        println("\n📚 You're ready for Step 4: LR(0) items and canonical collection")
-    } else {
-        println("\n⚠️  Some tests failed. Please fix the issues above.")
-        println("💡 Review FollowSets.kt implementation")
-    }
-    println()
 }
 
 /**
@@ -857,28 +168,41 @@ fun runStep3Tests() {
  */
 fun printUsage() {
     println("""
+        SLR Parser - Command Line Interface
+
         Usage:
           1. Parse input sequence:
-             ./program <grammar_file> <input_file>
+             ./gradlew run --args="<grammar_file> <input_file>"
 
           2. Check if grammar is SLR:
-             ./program --check-slr <grammar_file>
+             ./gradlew run --args="--check-slr <grammar_file>"
 
           3. Show FIRST and FOLLOW sets:
-             ./program --first-follow <grammar_file>
+             ./gradlew run --args="--first-follow <grammar_file>"
+
+          4. Show this help message:
+             ./gradlew run --args="--help"
 
         Examples:
-          ./program grammars/g2_arithmetic.txt inputs/test2_arithmetic.txt
-          ./program --check-slr grammars/g2_arithmetic.txt
-          ./program --first-follow grammars/g2_arithmetic.txt
+          ./gradlew run --args="grammars/g2_arithmetic.txt inputs/expr1.txt"
+          ./gradlew run --args="--check-slr grammars/g2_arithmetic.txt"
+          ./gradlew run --args="--first-follow grammars/g2_arithmetic.txt"
 
         Grammar file format:
-          N: <non-terminals>
-          T: <terminals>
-          S: <start symbol>
-          P:
           <production 1>
           <production 2>
           ...
+
+          Productions use format: LHS -> RHS
+          Non-terminals: Uppercase letters (A-Z)
+          Terminals: Everything else
+          Epsilon: Empty RHS or "epsilon" or "ε"
+          First production's LHS is the start symbol
+
+        Input file format:
+          Space-separated sequence of terminal symbols
+
+        To run tests:
+          ./gradlew test
     """.trimIndent())
 }
