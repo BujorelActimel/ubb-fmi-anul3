@@ -1,5 +1,4 @@
 import java.io.File
-import kotlin.collections.listOf
 
 class Grammar(filePath: String) {
     val nonTerminals: MutableSet<String> = mutableSetOf()

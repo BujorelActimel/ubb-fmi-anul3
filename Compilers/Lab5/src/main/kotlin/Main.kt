@@ -72,18 +72,18 @@ fun runStep1Tests() {
         println("  Start symbol: ${g1.startSymbol}")
 
         // Test symbol classification
-        assert(g1.isNonTerminal("S")) { "S should be non-terminal" }
-        assert(g1.isTerminal("a")) { "a should be terminal" }
-        assert(g1.isTerminal("b")) { "b should be terminal" }
-        assert(!g1.isTerminal("S")) { "S should NOT be terminal" }
-        assert(!g1.isNonTerminal("a")) { "a should NOT be non-terminal" }
+        check(g1.isNonTerminal("S")) { "S should be non-terminal" }
+        check(g1.isTerminal("a")) { "a should be terminal" }
+        check(g1.isTerminal("b")) { "b should be terminal" }
+        check(!g1.isTerminal("S")) { "S should NOT be terminal" }
+        check(!g1.isNonTerminal("a")) { "a should NOT be non-terminal" }
         println("  ✓ Symbol classification works correctly")
 
         // Test getProductionsFor
         val sProductions = g1.getProductionsFor("S")
         println("  Productions for S: ${sProductions.size}")
         sProductions.forEach { println("    - $it") }
-        assert(sProductions.size == 2) { "S should have 2 productions" }
+        check(sProductions.size == 2) { "S should have 2 productions" }
         println("  ✓ getProductionsFor() works correctly")
 
         println("✅ Test 1 PASSED\n")
@@ -110,13 +110,13 @@ fun runStep1Tests() {
         println("  Expected terminals: $expectedTerminals")
         println("  Found terminals: ${g2.terminals}")
 
-        assert(g2.nonTerminals == expectedNonTerminals) {
+        check(g2.nonTerminals == expectedNonTerminals) {
             "Non-terminals mismatch! Expected $expectedNonTerminals, got ${g2.nonTerminals}"
         }
-        assert(g2.terminals == expectedTerminals) {
+        check(g2.terminals == expectedTerminals) {
             "Terminals mismatch! Expected $expectedTerminals, got ${g2.terminals}"
         }
-        assert(g2.startSymbol == "E") { "Start symbol should be E" }
+        check(g2.startSymbol == "E") { "Start symbol should be E" }
 
         println("  ✓ All symbols classified correctly")
 
@@ -129,9 +129,9 @@ fun runStep1Tests() {
         }
 
         // Test terminal checks
-        assert(g2.isTerminal("+")) { "+ should be terminal" }
-        assert(g2.isNonTerminal("E")) { "E should be non-terminal" }
-        assert(!g2.isTerminal("E")) { "E should NOT be terminal" }
+        check(g2.isTerminal("+")) { "+ should be terminal" }
+        check(g2.isNonTerminal("E")) { "E should be non-terminal" }
+        check(!g2.isTerminal("E")) { "E should NOT be terminal" }
 
         println("\n✅ Test 2 PASSED\n")
         passedTests++
@@ -152,7 +152,7 @@ fun runStep1Tests() {
         println("✓ Epsilon productions found: ${epsilonProductions.size}")
         epsilonProductions.forEach { println("  - $it") }
 
-        assert(epsilonProductions.size == 2) {
+        check(epsilonProductions.size == 2) {
             "Should have 2 epsilon productions, found ${epsilonProductions.size}"
         }
 
@@ -162,8 +162,8 @@ fun runStep1Tests() {
         val aEpsilon = aProductions.any { it.isEpsilon() }
         val bEpsilon = bProductions.any { it.isEpsilon() }
 
-        assert(aEpsilon) { "A should have epsilon production" }
-        assert(bEpsilon) { "B should have epsilon production" }
+        check(aEpsilon) { "A should have epsilon production" }
+        check(bEpsilon) { "B should have epsilon production" }
         println("  ✓ Epsilon productions detected correctly")
 
         // Verify non-epsilon productions
@@ -198,15 +198,15 @@ fun runStep1Tests() {
         println("  Non-terminals: ${g4.nonTerminals}")
 
         // Verify augmentation
-        assert(g4.startSymbol == "E'") { "Start symbol should be E', got ${g4.startSymbol}" }
-        assert(g4.productions[0].lhs == "E'") { "First production LHS should be E'" }
-        assert(g4.productions[0].rhs == listOf("E")) { "Augmented production RHS should be [E]" }
-        assert(g4.isNonTerminal("E'")) { "E' should be recognized as non-terminal" }
-        assert(!g4.isTerminal("E'")) { "E' should NOT be terminal" }
+        check(g4.startSymbol == "E'") { "Start symbol should be E', got ${g4.startSymbol}" }
+        check(g4.productions[0].lhs == "E'") { "First production LHS should be E'" }
+        check(g4.productions[0].rhs == listOf("E")) { "Augmented production RHS should be [E]" }
+        check(g4.isNonTerminal("E'")) { "E' should be recognized as non-terminal" }
+        check(!g4.isTerminal("E'")) { "E' should NOT be terminal" }
 
         // Verify original productions still exist
         val eProds = g4.getProductionsFor("E")
-        assert(eProds.isNotEmpty()) { "Original E productions should still exist" }
+        check(eProds.isNotEmpty()) { "Original E productions should still exist" }
 
         println("\n  ✓ Grammar augmented correctly")
         println("  ✓ Augmented start symbol recognized as non-terminal")
@@ -225,24 +225,24 @@ fun runStep1Tests() {
 
         // Test with non-existent non-terminal
         val emptyProds = g5.getProductionsFor("X")
-        assert(emptyProds.isEmpty()) { "Non-existent non-terminal should return empty list" }
+        check(emptyProds.isEmpty()) { "Non-existent non-terminal should return empty list" }
         println("  ✓ getProductionsFor() handles non-existent non-terminal")
 
         // Test symbol classification with invalid symbols
-        assert(!g5.isTerminal("INVALID")) { "Unknown symbol should not be terminal" }
-        assert(!g5.isNonTerminal("invalid")) { "Unknown symbol should not be non-terminal" }
+        check(!g5.isTerminal("INVALID")) { "Unknown symbol should not be terminal" }
+        check(!g5.isNonTerminal("invalid")) { "Unknown symbol should not be non-terminal" }
         println("  ✓ Symbol classification handles unknown symbols")
 
         // Test that all productions have valid LHS
         g5.productions.forEach { prod ->
-            assert(g5.isNonTerminal(prod.lhs)) {
+            check(g5.isNonTerminal(prod.lhs)) {
                 "Production LHS ${prod.lhs} should be a non-terminal"
             }
         }
         println("  ✓ All production LHS are non-terminals")
 
         // Test that start symbol is a non-terminal
-        assert(g5.isNonTerminal(g5.startSymbol)) {
+        check(g5.isNonTerminal(g5.startSymbol)) {
             "Start symbol should be a non-terminal"
         }
         println("  ✓ Start symbol is a non-terminal")
@@ -447,6 +447,8 @@ fun showFirstFollow(grammarFile: String) {
     }
 }
 
+// Note: We use check() instead of check() because check() is disabled by default in JVM
+
 /**
  * Step 2: Test FIRST sets implementation
  */
@@ -482,29 +484,29 @@ fun runStep2Tests() {
         println("✓ Verification:")
         println("  Expected FIRST(E) = $expectedFirstE")
         println("  Actual FIRST(E) = $actualFirstE")
-        assert(actualFirstE == expectedFirstE) {
+        check(actualFirstE == expectedFirstE) {
             "FIRST(E) mismatch! Expected $expectedFirstE, got $actualFirstE"
         }
 
         println("  Expected FIRST(T) = $expectedFirstT")
         println("  Actual FIRST(T) = $actualFirstT")
-        assert(actualFirstT == expectedFirstT) {
+        check(actualFirstT == expectedFirstT) {
             "FIRST(T) mismatch! Expected $expectedFirstT, got $actualFirstT"
         }
 
         println("  Expected FIRST(F) = $expectedFirstF")
         println("  Actual FIRST(F) = $actualFirstF")
-        assert(actualFirstF == expectedFirstF) {
+        check(actualFirstF == expectedFirstF) {
             "FIRST(F) mismatch! Expected $expectedFirstF, got $actualFirstF"
         }
 
         // Test terminals
-        assert(firstSets.getFirst("+") == setOf("+")) { "FIRST(+) should be {+}" }
-        assert(firstSets.getFirst("id") == setOf("id")) { "FIRST(id) should be {id}" }
+        check(firstSets.getFirst("+") == setOf("+")) { "FIRST(+) should be {+}" }
+        check(firstSets.getFirst("id") == setOf("id")) { "FIRST(id) should be {id}" }
 
         // Test epsilon derivation
-        assert(!firstSets.canDeriveEpsilon("E")) { "E should not derive epsilon" }
-        assert(!firstSets.canDeriveEpsilon("T")) { "T should not derive epsilon" }
+        check(!firstSets.canDeriveEpsilon("E")) { "E should not derive epsilon" }
+        check(!firstSets.canDeriveEpsilon("T")) { "T should not derive epsilon" }
 
         println("  ✓ All FIRST sets correct")
         println("  ✓ Epsilon derivation correct")
@@ -527,10 +529,10 @@ fun runStep2Tests() {
         println("FIRST Sets:")
         firstSets.print()
 
-        // Verify FIRST sets with epsilon
+        // Verify FIRST sets (no epsilon - that's tracked separately in nullable)
         val expectedFirstS = setOf("a", "b", "c")
-        val expectedFirstA = setOf("a", "ε")
-        val expectedFirstB = setOf("b", "ε")
+        val expectedFirstA = setOf("a")  // ε tracked in nullable, not FIRST
+        val expectedFirstB = setOf("b")  // ε tracked in nullable, not FIRST
 
         val actualFirstS = firstSets.getFirst("S")
         val actualFirstA = firstSets.getFirst("A")
@@ -539,26 +541,26 @@ fun runStep2Tests() {
         println("✓ Verification:")
         println("  Expected FIRST(S) = $expectedFirstS")
         println("  Actual FIRST(S) = $actualFirstS")
-        assert(actualFirstS == expectedFirstS) {
+        check(actualFirstS == expectedFirstS) {
             "FIRST(S) mismatch! Expected $expectedFirstS, got $actualFirstS"
         }
 
         println("  Expected FIRST(A) = $expectedFirstA")
         println("  Actual FIRST(A) = $actualFirstA")
-        assert(actualFirstA == expectedFirstA) {
+        check(actualFirstA == expectedFirstA) {
             "FIRST(A) mismatch! Expected $expectedFirstA, got $actualFirstA"
         }
 
         println("  Expected FIRST(B) = $expectedFirstB")
         println("  Actual FIRST(B) = $actualFirstB")
-        assert(actualFirstB == expectedFirstB) {
+        check(actualFirstB == expectedFirstB) {
             "FIRST(B) mismatch! Expected $expectedFirstB, got $actualFirstB"
         }
 
         // Test epsilon derivation
-        assert(firstSets.canDeriveEpsilon("A")) { "A should derive epsilon" }
-        assert(firstSets.canDeriveEpsilon("B")) { "B should derive epsilon" }
-        assert(!firstSets.canDeriveEpsilon("S")) { "S should not derive epsilon" }
+        check(firstSets.canDeriveEpsilon("A")) { "A should derive epsilon" }
+        check(firstSets.canDeriveEpsilon("B")) { "B should derive epsilon" }
+        check(!firstSets.canDeriveEpsilon("S")) { "S should not derive epsilon" }
 
         println("  ✓ All FIRST sets with epsilon correct")
         println("  ✓ Epsilon derivation detection correct")
@@ -584,7 +586,7 @@ fun runStep2Tests() {
         val expected1 = setOf("a", "b", "c")
         println("  FIRST(A B c) = $result1")
         println("  Expected: $expected1")
-        assert(result1 == expected1) {
+        check(result1 == expected1) {
             "FIRST(A B c) mismatch! Expected $expected1, got $result1"
         }
 
@@ -594,7 +596,7 @@ fun runStep2Tests() {
         val expected2 = setOf("a")
         println("  FIRST(A a) = $result2")
         println("  Expected: $expected2")
-        assert(result2 == expected2) {
+        check(result2 == expected2) {
             "FIRST(A a) mismatch! Expected $expected2, got $result2"
         }
 
@@ -604,21 +606,36 @@ fun runStep2Tests() {
         val expected3 = setOf("c")
         println("  FIRST(c) = $result3")
         println("  Expected: $expected3")
-        assert(result3 == expected3) {
+        check(result3 == expected3) {
             "FIRST(c) mismatch! Expected $expected3, got $result3"
         }
 
         // Test: FIRST(A B) where both are nullable
         val seq4 = listOf("A", "B")
         val result4 = firstSets.firstOfString(seq4)
-        val expected4 = setOf("a", "b", "ε")
+        // Both nullable - but NO ε in result, only terminals
+        val expected4 = setOf("a", "b")  // NO ε - nullable tracked separately
         println("  FIRST(A B) = $result4")
         println("  Expected: $expected4")
-        assert(result4 == expected4) {
+        check(result4 == expected4) {
             "FIRST(A B) mismatch! Expected $expected4, got $result4"
         }
 
         println("  ✓ All firstOfString() tests correct")
+
+        // Test canDeriveEpsilonFromSequence
+        println("\n  Testing canDeriveEpsilonFromSequence()...")
+        check(firstSets.canDeriveEpsilonFromSequence(listOf("A", "B"))) {
+            "Sequence [A, B] should be nullable (both are nullable)"
+        }
+        check(!firstSets.canDeriveEpsilonFromSequence(listOf("A", "c"))) {
+            "Sequence [A, c] should NOT be nullable (c is not nullable)"
+        }
+        check(firstSets.canDeriveEpsilonFromSequence(emptyList())) {
+            "Empty sequence should be nullable"
+        }
+        println("  ✓ canDeriveEpsilonFromSequence() correct")
+
         println("✅ Test 3 PASSED\n")
         passedTests++
     } catch (e: Exception) {
@@ -644,11 +661,11 @@ fun runStep2Tests() {
         println("✓ Verification:")
         println("  Expected FIRST(S) = $expectedFirstS")
         println("  Actual FIRST(S) = $actualFirstS")
-        assert(actualFirstS == expectedFirstS) {
+        check(actualFirstS == expectedFirstS) {
             "FIRST(S) mismatch! Expected $expectedFirstS, got $actualFirstS"
         }
 
-        assert(!firstSets.canDeriveEpsilon("S")) { "S should not derive epsilon" }
+        check(!firstSets.canDeriveEpsilon("S")) { "S should not derive epsilon" }
 
         println("  ✓ FIRST(S) correct")
         println("✅ Test 4 PASSED\n")
