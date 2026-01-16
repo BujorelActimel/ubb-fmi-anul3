@@ -46,9 +46,9 @@ void gen_func_prologue(CodeGenContext *ctx, int local_vars) {
     fprintf(ctx->output, "    pushq %%rbp\n");
     fprintf(ctx->output, "    movq %%rsp, %%rbp\n");
     if (local_vars > 0) {
-        /* Align stack to 16 bytes */
+        // Align stack to 16 bytes
         int stack_size = local_vars * 8;
-        /* Round up to multiple of 16 */
+        // Round up to multiple of 16
         stack_size = (stack_size + 15) & ~15;
         fprintf(ctx->output, "    subq $%d, %%rsp\n", stack_size);
     }
@@ -75,17 +75,14 @@ void gen_scanf(CodeGenContext *ctx, ASTNode *var_node) {
 }
 
 void gen_printf(CodeGenContext *ctx, ASTNode *arg) {
-    /* Evaluate expression into rax */
     gen_expression(ctx, arg);
 
-    /* Call printf */
     fprintf(ctx->output, "    movq %%rax, %%rsi\n");
     fprintf(ctx->output, "    leaq fmt_out(%%rip), %%rdi\n");
     fprintf(ctx->output, "    xorq %%rax, %%rax\n");
     fprintf(ctx->output, "    call printf@PLT\n");
 }
 
-/* Generate expression evaluation (result in rax) */
 void gen_expression(CodeGenContext *ctx, ASTNode *node) {
     if (!node) return;
 
@@ -101,16 +98,13 @@ void gen_expression(CodeGenContext *ctx, ASTNode *node) {
         }
 
         case AST_BINARY_EXPR: {
-            /* Evaluate left side */
             gen_expression(ctx, node->data.binary.left);
             fprintf(ctx->output, "    pushq %%rax\n");
 
-            /* Evaluate right side */
             gen_expression(ctx, node->data.binary.right);
             fprintf(ctx->output, "    movq %%rax, %%rbx\n");
             fprintf(ctx->output, "    popq %%rax\n");
 
-            /* Perform operation */
             switch (node->data.binary.op) {
                 case OP_ADD:
                     fprintf(ctx->output, "    addq %%rbx, %%rax\n");
@@ -153,7 +147,6 @@ void gen_expression(CodeGenContext *ctx, ASTNode *node) {
     }
 }
 
-/* Generate statement */
 void gen_statement(CodeGenContext *ctx, ASTNode *node) {
     if (!node) return;
 
@@ -183,10 +176,8 @@ void gen_statement(CodeGenContext *ctx, ASTNode *node) {
         }
 
         case AST_BLOCK_STMT: {
-            /* For blocks, process all statements in the list */
             ASTNode *stmt = node->data.block.statements;
             while (stmt) {
-                /* Process this statement (but don't recurse on next) */
                 switch (stmt->type) {
                         case AST_ASSIGN_STMT: {
                         gen_expression(ctx, stmt->data.assign.value);
@@ -210,7 +201,7 @@ void gen_statement(CodeGenContext *ctx, ASTNode *node) {
                         break;
                     }
                     case AST_BLOCK_STMT:
-                        gen_statement(ctx, stmt);  /* Recursive for nested blocks */
+                        gen_statement(ctx, stmt);
                         break;
                     case AST_RETURN_STMT:
                         if (stmt->data.return_stmt.value) {
@@ -238,7 +229,6 @@ void gen_statement(CodeGenContext *ctx, ASTNode *node) {
     }
 }
 
-/* Count variables (for stack allocation) */
 int count_local_vars(ASTNode *body) {
     int count = 0;
     if (body && body->type == AST_BLOCK_STMT) {
@@ -253,22 +243,18 @@ int count_local_vars(ASTNode *body) {
     return count;
 }
 
-/* Generate function */
 void gen_function(CodeGenContext *ctx, ASTNode *node) {
     fprintf(ctx->output, "%s:\n", node->data.func_decl.name);
 
-    /* Count local variables (only those not already registered as global) */
     ASTNode *body = node->data.func_decl.body;
     int total_vars = 0;
 
-    /* Count how many vars we already have registered globally */
     for (VarEntry *e = var_table; e != NULL; e = e->next) {
         total_vars++;
     }
 
     gen_func_prologue(ctx, total_vars);
 
-    /* Generate function body */
     if (body) {
         gen_statement(ctx, body);
     }
@@ -276,11 +262,9 @@ void gen_function(CodeGenContext *ctx, ASTNode *node) {
     gen_func_epilogue(ctx);
 }
 
-/* Generate program */
 void gen_program(CodeGenContext *ctx, ASTNode *node) {
     gen_prologue(ctx);
 
-    /* Register global variables */
     ASTNode *decl = node->data.program.declarations;
     int var_count = 0;
     while (decl) {
@@ -292,13 +276,11 @@ void gen_program(CodeGenContext *ctx, ASTNode *node) {
         decl = decl->next;
     }
 
-    /* Generate main function */
     if (node->data.program.main_func) {
         gen_function(ctx, node->data.program.main_func);
     }
 }
 
-/* Main entry point */
 void generate_x86_code(ASTNode *root, FILE *output) {
     CodeGenContext ctx = {
         .output = output,
