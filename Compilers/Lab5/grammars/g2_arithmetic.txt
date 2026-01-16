@@ -1,9 +1,4 @@
-# Arithmetic expression grammar
-# Supports: addition, multiplication, parentheses, identifiers
-# Examples: id, id + id, id * id + id, (id + id) * id
-# Non-terminals: E, T, F (uppercase)
-# Terminals: +, *, (, ), id (operators and lowercase)
-# Start symbol: E (first production LHS)
+# Expresii aritmetice
 
 E -> E + T
 E -> T

@@ -44,23 +44,17 @@ fun parseInput(grammarFile: String, inputFile: String) {
         println("Grammar file: $grammarFile")
         println("Input file: $inputFile\n")
 
-        // Load grammar
         val grammar = Grammar(grammarFile)
 
-        // Augment grammar
         grammar.augmentGrammar()
 
-        // Compute FIRST and FOLLOW sets
         val firstSets = FirstSets(grammar)
         val followSets = FollowSets(grammar, firstSets)
 
-        // Build LR(0) automaton
         val automaton = LRAutomaton(grammar, firstSets)
 
-        // Build SLR parsing table
         val slrTable = SLRTable(grammar, automaton, followSets)
 
-        // Check if grammar is SLR
         if (!slrTable.isSLR()) {
             println("ERROR: Grammar is not SLR!")
             println("Conflicts found:")
@@ -70,18 +64,14 @@ fun parseInput(grammarFile: String, inputFile: String) {
             return
         }
 
-        // Create parser
         val parser = SLRParser(grammar, slrTable)
 
-        // Tokenize input file
         println("Tokenizing: $inputFile")
         val tokens = MLPTokenizer.tokenizeFile(inputFile)
         println("Tokens: ${tokens.joinToString(" ")}\n")
 
-        // Parse tokenized input
         val result = parser.parse(tokens)
 
-        // Display results
         println(result)
 
     } catch (e: Exception) {
@@ -90,43 +80,33 @@ fun parseInput(grammarFile: String, inputFile: String) {
     }
 }
 
-/**
- * Check if a grammar is SLR.
- */
 fun checkIfSLR(grammarFile: String) {
     try {
         println("=== Checking if Grammar is SLR ===\n")
         println("Grammar file: $grammarFile\n")
 
-        // Load grammar
         val grammar = Grammar(grammarFile)
         grammar.print()
 
-        // Augment grammar
         grammar.augmentGrammar()
 
-        // Compute FIRST and FOLLOW sets
         val firstSets = FirstSets(grammar)
         val followSets = FollowSets(grammar, firstSets)
 
-        // Print FIRST and FOLLOW sets
         firstSets.print()
         followSets.print()
 
-        // Build LR(0) automaton
         val automaton = LRAutomaton(grammar, firstSets)
         println("Number of states: ${automaton.getStates().size}")
         println("Number of transitions: ${automaton.getAllTransitions().size}\n")
 
-        // Build SLR parsing table
         val slrTable = SLRTable(grammar, automaton, followSets)
 
-        // Check for conflicts
         if (slrTable.isSLR()) {
-            println("✓ Grammar is SLR (no conflicts)\n")
+            println("Grammar is SLR (no conflicts)\n")
             slrTable.print()
         } else {
-            println("✗ Grammar is NOT SLR\n")
+            println("Grammar is NOT SLR\n")
             println("Conflicts found:")
             for (conflict in slrTable.getConflicts()) {
                 println(conflict)
@@ -140,9 +120,6 @@ fun checkIfSLR(grammarFile: String) {
     }
 }
 
-/**
- * Compute and display FIRST and FOLLOW sets for the grammar.
- */
 fun showFirstFollow(grammarFile: String) {
     try {
         println("=== Computing FIRST and FOLLOW Sets ===\n")
@@ -151,11 +128,9 @@ fun showFirstFollow(grammarFile: String) {
         val grammar = Grammar(grammarFile)
         grammar.print()
 
-        // Compute FIRST sets
         val firstSets = FirstSets(grammar)
         firstSets.print()
 
-        // Compute FOLLOW sets
         val followSets = FollowSets(grammar, firstSets)
         followSets.print()
 
@@ -165,9 +140,6 @@ fun showFirstFollow(grammarFile: String) {
     }
 }
 
-/**
- * Print usage information.
- */
 fun printUsage() {
     println("""
         SLR Parser - Command Line Interface

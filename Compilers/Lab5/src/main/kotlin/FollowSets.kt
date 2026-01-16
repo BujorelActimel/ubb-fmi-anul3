@@ -13,7 +13,6 @@ class FollowSets(
             follow[nonTerminal] = mutableSetOf()
         }
 
-        // Add $ to FOLLOW(startSymbol)
         follow[grammar.startSymbol]?.add("$")
 
         do {

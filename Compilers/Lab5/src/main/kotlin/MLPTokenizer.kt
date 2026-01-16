@@ -59,7 +59,6 @@ class MLPTokenizer(private val source: String) {
                 tryReadMultiCharOperator() -> continue
                 tryReadSingleCharToken() -> continue
                 else -> {
-                    // Skip unknown character
                     position++
                 }
             }
@@ -75,14 +74,12 @@ class MLPTokenizer(private val source: String) {
 
     private fun tryReadComment(): Boolean {
         if (position + 1 < source.length && source[position] == '/' && source[position + 1] == '/') {
-            // Line comment
             while (position < source.length && source[position] != '\n') {
                 position++
             }
             return true
         }
         if (position + 1 < source.length && source[position] == '/' && source[position + 1] == '*') {
-            // Block comment
             position += 2
             while (position + 1 < source.length) {
                 if (source[position] == '*' && source[position + 1] == '/') {
@@ -100,22 +97,21 @@ class MLPTokenizer(private val source: String) {
         if (source[position] != '"') return false
 
         val start = position
-        position++ // Skip opening quote
+        position++
 
         while (position < source.length && source[position] != '"') {
             if (source[position] == '\\') {
-                position++ // Skip escape character
+                position++
             }
             position++
         }
 
         if (position < source.length) {
-            position++ // Skip closing quote
+            position++
         }
 
         val stringValue = source.substring(start, position)
 
-        // Check if it's a format string (with optional escape sequences)
         if (stringValue.matches(Regex("\"%(d|s).*\""))) {
             tokens.add("fmtstr")
         } else {
@@ -152,10 +148,9 @@ class MLPTokenizer(private val source: String) {
             position++
         }
 
-        // Check for dotted identifiers like fmt.Printf
         if (position < source.length && source[position] == '.') {
             val firstPart = source.substring(start, position)
-            position++ // Skip dot
+            position++
 
             val dotStart = position
             while (position < source.length &&
@@ -164,7 +159,6 @@ class MLPTokenizer(private val source: String) {
             }
             val secondPart = source.substring(dotStart, position)
 
-            // Special handling for fmt.Printf and fmt.Scanf
             when ("$firstPart.$secondPart") {
                 "fmt.Printf" -> tokens.add("printf")
                 "fmt.Scanf" -> tokens.add("scanf")
@@ -179,7 +173,6 @@ class MLPTokenizer(private val source: String) {
 
         val identifier = source.substring(start, position)
 
-        // Check if it's a keyword
         if (identifier in keywords) {
             tokens.add(identifier)
         } else {
@@ -218,9 +211,6 @@ class MLPTokenizer(private val source: String) {
     }
 
     companion object {
-        /**
-         * Tokenize a source file.
-         */
         fun tokenizeFile(filePath: String): List<String> {
             val source = File(filePath).readText()
             return MLPTokenizer(source).tokenize()

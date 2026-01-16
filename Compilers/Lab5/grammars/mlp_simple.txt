@@ -1,3 +1,5 @@
+# mini golang
+
 PROGRAM -> package id IMPORTS DECLS FUNCS
 IMPORTS -> import string
 IMPORTS -> ε
