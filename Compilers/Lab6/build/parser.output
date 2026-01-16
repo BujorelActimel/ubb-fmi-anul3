@@ -1,0 +1,998 @@
+Terminals unused in grammar
+
+    SEMICOLON
+    DOT
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: package_decl import_decl declaration_list func_decl
+    2        | package_decl declaration_list func_decl
+
+    3 package_decl: PACKAGE IDENTIFIER
+
+    4 import_decl: IMPORT STRING_LITERAL
+
+    5 declaration_list: ε
+    6                 | declaration_list declaration
+
+    7 declaration: var_decl
+
+    8 var_decl: VAR IDENTIFIER INT
+
+    9 func_decl: FUNC IDENTIFIER LPAREN RPAREN LBRACE func_body RBRACE
+
+   10 func_body: local_decl_list statement_list
+
+   11 local_decl_list: ε
+   12                | local_decl_list var_decl
+
+   13 statement_list: ε
+   14               | statement_list statement
+
+   15 statement: assignment_stmt
+   16          | return_stmt
+   17          | scanf_stmt
+   18          | printf_stmt
+   19          | block_stmt
+
+   20 assignment_stmt: IDENTIFIER ASSIGN expression
+
+   21 return_stmt: RETURN expression
+
+   22 scanf_stmt: FMT_SCANF LPAREN format_string COMMA var_list RPAREN
+
+   23 printf_stmt: FMT_PRINTF LPAREN format_string RPAREN
+   24            | FMT_PRINTF LPAREN format_string COMMA arg_list RPAREN
+
+   25 block_stmt: LBRACE statement_list RBRACE
+
+   26 format_string: STRING_LITERAL
+
+   27 var_list: AMPERSAND IDENTIFIER
+   28         | var_list COMMA AMPERSAND IDENTIFIER
+
+   29 arg_list: expression
+   30         | arg_list COMMA expression
+
+   31 expression: additive
+
+   32 additive: multiplicative
+   33         | additive PLUS multiplicative
+   34         | additive MINUS multiplicative
+
+   35 multiplicative: unary
+   36               | multiplicative STAR unary
+   37               | multiplicative SLASH unary
+   38               | multiplicative PERCENT unary
+
+   39 unary: primary
+   40      | MINUS unary
+   41      | AMPERSAND unary
+
+   42 primary: IDENTIFIER
+   43        | INTEGER_CONST
+   44        | LPAREN expression RPAREN
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    error (256)
+    PACKAGE (258) 3
+    IMPORT (259) 4
+    FUNC (260) 9
+    VAR (261) 8
+    RETURN (262) 21
+    INT (263) 8
+    FMT_SCANF (264) 22
+    FMT_PRINTF (265) 23 24
+    PLUS (266) 33
+    MINUS (267) 34 40
+    STAR (268) 36
+    SLASH (269) 37
+    PERCENT (270) 38
+    AMPERSAND (271) 27 28 41
+    ASSIGN (272) 20
+    LPAREN (273) 9 22 23 24 44
+    RPAREN (274) 9 22 23 24 44
+    LBRACE (275) 9 25
+    RBRACE (276) 9 25
+    COMMA (277) 22 24 28 30
+    SEMICOLON (278)
+    DOT (279)
+    IDENTIFIER <str_val> (280) 3 8 9 20 27 28 42
+    STRING_LITERAL <str_val> (281) 4 26
+    INTEGER_CONST <int_val> (282) 43
+
+
+Nonterminals, with rules where they appear
+
+    $accept (28)
+        on left: 0
+    program <node> (29)
+        on left: 1 2
+        on right: 0
+    package_decl <node> (30)
+        on left: 3
+        on right: 1 2
+    import_decl <node> (31)
+        on left: 4
+        on right: 1
+    declaration_list <node> (32)
+        on left: 5 6
+        on right: 1 2 6
+    declaration <node> (33)
+        on left: 7
+        on right: 6
+    var_decl <node> (34)
+        on left: 8
+        on right: 7 12
+    func_decl <node> (35)
+        on left: 9
+        on right: 1 2
+    func_body <node> (36)
+        on left: 10
+        on right: 9
+    local_decl_list <node> (37)
+        on left: 11 12
+        on right: 10 12
+    statement_list <node> (38)
+        on left: 13 14
+        on right: 10 14 25
+    statement <node> (39)
+        on left: 15 16 17 18 19
+        on right: 14
+    assignment_stmt <node> (40)
+        on left: 20
+        on right: 15
+    return_stmt <node> (41)
+        on left: 21
+        on right: 16
+    scanf_stmt <node> (42)
+        on left: 22
+        on right: 17
+    printf_stmt <node> (43)
+        on left: 23 24
+        on right: 18
+    block_stmt <node> (44)
+        on left: 25
+        on right: 19
+    format_string <str_val> (45)
+        on left: 26
+        on right: 22 23 24
+    var_list <node> (46)
+        on left: 27 28
+        on right: 22 28
+    arg_list <node> (47)
+        on left: 29 30
+        on right: 24 30
+    expression <node> (48)
+        on left: 31
+        on right: 20 21 29 30 44
+    additive <node> (49)
+        on left: 32 33 34
+        on right: 31 33 34
+    multiplicative <node> (50)
+        on left: 35 36 37 38
+        on right: 32 33 34 36 37 38
+    unary <node> (51)
+        on left: 39 40 41
+        on right: 35 36 37 38 40 41
+    primary <node> (52)
+        on left: 42 43 44
+        on right: 39
+
+
+State 0
+
+    0 $accept: • program $end
+
+    PACKAGE  shift, and go to state 1
+
+    program       go to state 2
+    package_decl  go to state 3
+
+
+State 1
+
+    3 package_decl: PACKAGE • IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 4
+
+
+State 2
+
+    0 $accept: program • $end
+
+    $end  shift, and go to state 5
+
+
+State 3
+
+    1 program: package_decl • import_decl declaration_list func_decl
+    2        | package_decl • declaration_list func_decl
+
+    IMPORT  shift, and go to state 6
+
+    $default  reduce using rule 5 (declaration_list)
+
+    import_decl       go to state 7
+    declaration_list  go to state 8
+
+
+State 4
+
+    3 package_decl: PACKAGE IDENTIFIER •
+
+    $default  reduce using rule 3 (package_decl)
+
+
+State 5
+
+    0 $accept: program $end •
+
+    $default  accept
+
+
+State 6
+
+    4 import_decl: IMPORT • STRING_LITERAL
+
+    STRING_LITERAL  shift, and go to state 9
+
+
+State 7
+
+    1 program: package_decl import_decl • declaration_list func_decl
+
+    $default  reduce using rule 5 (declaration_list)
+
+    declaration_list  go to state 10
+
+
+State 8
+
+    2 program: package_decl declaration_list • func_decl
+    6 declaration_list: declaration_list • declaration
+
+    FUNC  shift, and go to state 11
+    VAR   shift, and go to state 12
+
+    declaration  go to state 13
+    var_decl     go to state 14
+    func_decl    go to state 15
+
+
+State 9
+
+    4 import_decl: IMPORT STRING_LITERAL •
+
+    $default  reduce using rule 4 (import_decl)
+
+
+State 10
+
+    1 program: package_decl import_decl declaration_list • func_decl
+    6 declaration_list: declaration_list • declaration
+
+    FUNC  shift, and go to state 11
+    VAR   shift, and go to state 12
+
+    declaration  go to state 13
+    var_decl     go to state 14
+    func_decl    go to state 16
+
+
+State 11
+
+    9 func_decl: FUNC • IDENTIFIER LPAREN RPAREN LBRACE func_body RBRACE
+
+    IDENTIFIER  shift, and go to state 17
+
+
+State 12
+
+    8 var_decl: VAR • IDENTIFIER INT
+
+    IDENTIFIER  shift, and go to state 18
+
+
+State 13
+
+    6 declaration_list: declaration_list declaration •
+
+    $default  reduce using rule 6 (declaration_list)
+
+
+State 14
+
+    7 declaration: var_decl •
+
+    $default  reduce using rule 7 (declaration)
+
+
+State 15
+
+    2 program: package_decl declaration_list func_decl •
+
+    $default  reduce using rule 2 (program)
+
+
+State 16
+
+    1 program: package_decl import_decl declaration_list func_decl •
+
+    $default  reduce using rule 1 (program)
+
+
+State 17
+
+    9 func_decl: FUNC IDENTIFIER • LPAREN RPAREN LBRACE func_body RBRACE
+
+    LPAREN  shift, and go to state 19
+
+
+State 18
+
+    8 var_decl: VAR IDENTIFIER • INT
+
+    INT  shift, and go to state 20
+
+
+State 19
+
+    9 func_decl: FUNC IDENTIFIER LPAREN • RPAREN LBRACE func_body RBRACE
+
+    RPAREN  shift, and go to state 21
+
+
+State 20
+
+    8 var_decl: VAR IDENTIFIER INT •
+
+    $default  reduce using rule 8 (var_decl)
+
+
+State 21
+
+    9 func_decl: FUNC IDENTIFIER LPAREN RPAREN • LBRACE func_body RBRACE
+
+    LBRACE  shift, and go to state 22
+
+
+State 22
+
+    9 func_decl: FUNC IDENTIFIER LPAREN RPAREN LBRACE • func_body RBRACE
+
+    $default  reduce using rule 11 (local_decl_list)
+
+    func_body        go to state 23
+    local_decl_list  go to state 24
+
+
+State 23
+
+    9 func_decl: FUNC IDENTIFIER LPAREN RPAREN LBRACE func_body • RBRACE
+
+    RBRACE  shift, and go to state 25
+
+
+State 24
+
+   10 func_body: local_decl_list • statement_list
+   12 local_decl_list: local_decl_list • var_decl
+
+    VAR  shift, and go to state 12
+
+    $default  reduce using rule 13 (statement_list)
+
+    var_decl        go to state 26
+    statement_list  go to state 27
+
+
+State 25
+
+    9 func_decl: FUNC IDENTIFIER LPAREN RPAREN LBRACE func_body RBRACE •
+
+    $default  reduce using rule 9 (func_decl)
+
+
+State 26
+
+   12 local_decl_list: local_decl_list var_decl •
+
+    $default  reduce using rule 12 (local_decl_list)
+
+
+State 27
+
+   10 func_body: local_decl_list statement_list •
+   14 statement_list: statement_list • statement
+
+    RETURN      shift, and go to state 28
+    FMT_SCANF   shift, and go to state 29
+    FMT_PRINTF  shift, and go to state 30
+    LBRACE      shift, and go to state 31
+    IDENTIFIER  shift, and go to state 32
+
+    $default  reduce using rule 10 (func_body)
+
+    statement        go to state 33
+    assignment_stmt  go to state 34
+    return_stmt      go to state 35
+    scanf_stmt       go to state 36
+    printf_stmt      go to state 37
+    block_stmt       go to state 38
+
+
+State 28
+
+   21 return_stmt: RETURN • expression
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    expression      go to state 44
+    additive        go to state 45
+    multiplicative  go to state 46
+    unary           go to state 47
+    primary         go to state 48
+
+
+State 29
+
+   22 scanf_stmt: FMT_SCANF • LPAREN format_string COMMA var_list RPAREN
+
+    LPAREN  shift, and go to state 49
+
+
+State 30
+
+   23 printf_stmt: FMT_PRINTF • LPAREN format_string RPAREN
+   24            | FMT_PRINTF • LPAREN format_string COMMA arg_list RPAREN
+
+    LPAREN  shift, and go to state 50
+
+
+State 31
+
+   25 block_stmt: LBRACE • statement_list RBRACE
+
+    $default  reduce using rule 13 (statement_list)
+
+    statement_list  go to state 51
+
+
+State 32
+
+   20 assignment_stmt: IDENTIFIER • ASSIGN expression
+
+    ASSIGN  shift, and go to state 52
+
+
+State 33
+
+   14 statement_list: statement_list statement •
+
+    $default  reduce using rule 14 (statement_list)
+
+
+State 34
+
+   15 statement: assignment_stmt •
+
+    $default  reduce using rule 15 (statement)
+
+
+State 35
+
+   16 statement: return_stmt •
+
+    $default  reduce using rule 16 (statement)
+
+
+State 36
+
+   17 statement: scanf_stmt •
+
+    $default  reduce using rule 17 (statement)
+
+
+State 37
+
+   18 statement: printf_stmt •
+
+    $default  reduce using rule 18 (statement)
+
+
+State 38
+
+   19 statement: block_stmt •
+
+    $default  reduce using rule 19 (statement)
+
+
+State 39
+
+   40 unary: MINUS • unary
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    unary    go to state 53
+    primary  go to state 48
+
+
+State 40
+
+   41 unary: AMPERSAND • unary
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    unary    go to state 54
+    primary  go to state 48
+
+
+State 41
+
+   44 primary: LPAREN • expression RPAREN
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    expression      go to state 55
+    additive        go to state 45
+    multiplicative  go to state 46
+    unary           go to state 47
+    primary         go to state 48
+
+
+State 42
+
+   42 primary: IDENTIFIER •
+
+    $default  reduce using rule 42 (primary)
+
+
+State 43
+
+   43 primary: INTEGER_CONST •
+
+    $default  reduce using rule 43 (primary)
+
+
+State 44
+
+   21 return_stmt: RETURN expression •
+
+    $default  reduce using rule 21 (return_stmt)
+
+
+State 45
+
+   31 expression: additive •
+   33 additive: additive • PLUS multiplicative
+   34         | additive • MINUS multiplicative
+
+    PLUS   shift, and go to state 56
+    MINUS  shift, and go to state 57
+
+    $default  reduce using rule 31 (expression)
+
+
+State 46
+
+   32 additive: multiplicative •
+   36 multiplicative: multiplicative • STAR unary
+   37               | multiplicative • SLASH unary
+   38               | multiplicative • PERCENT unary
+
+    STAR     shift, and go to state 58
+    SLASH    shift, and go to state 59
+    PERCENT  shift, and go to state 60
+
+    $default  reduce using rule 32 (additive)
+
+
+State 47
+
+   35 multiplicative: unary •
+
+    $default  reduce using rule 35 (multiplicative)
+
+
+State 48
+
+   39 unary: primary •
+
+    $default  reduce using rule 39 (unary)
+
+
+State 49
+
+   22 scanf_stmt: FMT_SCANF LPAREN • format_string COMMA var_list RPAREN
+
+    STRING_LITERAL  shift, and go to state 61
+
+    format_string  go to state 62
+
+
+State 50
+
+   23 printf_stmt: FMT_PRINTF LPAREN • format_string RPAREN
+   24            | FMT_PRINTF LPAREN • format_string COMMA arg_list RPAREN
+
+    STRING_LITERAL  shift, and go to state 61
+
+    format_string  go to state 63
+
+
+State 51
+
+   14 statement_list: statement_list • statement
+   25 block_stmt: LBRACE statement_list • RBRACE
+
+    RETURN      shift, and go to state 28
+    FMT_SCANF   shift, and go to state 29
+    FMT_PRINTF  shift, and go to state 30
+    LBRACE      shift, and go to state 31
+    RBRACE      shift, and go to state 64
+    IDENTIFIER  shift, and go to state 32
+
+    statement        go to state 33
+    assignment_stmt  go to state 34
+    return_stmt      go to state 35
+    scanf_stmt       go to state 36
+    printf_stmt      go to state 37
+    block_stmt       go to state 38
+
+
+State 52
+
+   20 assignment_stmt: IDENTIFIER ASSIGN • expression
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    expression      go to state 65
+    additive        go to state 45
+    multiplicative  go to state 46
+    unary           go to state 47
+    primary         go to state 48
+
+
+State 53
+
+   40 unary: MINUS unary •
+
+    $default  reduce using rule 40 (unary)
+
+
+State 54
+
+   41 unary: AMPERSAND unary •
+
+    $default  reduce using rule 41 (unary)
+
+
+State 55
+
+   44 primary: LPAREN expression • RPAREN
+
+    RPAREN  shift, and go to state 66
+
+
+State 56
+
+   33 additive: additive PLUS • multiplicative
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    multiplicative  go to state 67
+    unary           go to state 47
+    primary         go to state 48
+
+
+State 57
+
+   34 additive: additive MINUS • multiplicative
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    multiplicative  go to state 68
+    unary           go to state 47
+    primary         go to state 48
+
+
+State 58
+
+   36 multiplicative: multiplicative STAR • unary
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    unary    go to state 69
+    primary  go to state 48
+
+
+State 59
+
+   37 multiplicative: multiplicative SLASH • unary
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    unary    go to state 70
+    primary  go to state 48
+
+
+State 60
+
+   38 multiplicative: multiplicative PERCENT • unary
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    unary    go to state 71
+    primary  go to state 48
+
+
+State 61
+
+   26 format_string: STRING_LITERAL •
+
+    $default  reduce using rule 26 (format_string)
+
+
+State 62
+
+   22 scanf_stmt: FMT_SCANF LPAREN format_string • COMMA var_list RPAREN
+
+    COMMA  shift, and go to state 72
+
+
+State 63
+
+   23 printf_stmt: FMT_PRINTF LPAREN format_string • RPAREN
+   24            | FMT_PRINTF LPAREN format_string • COMMA arg_list RPAREN
+
+    RPAREN  shift, and go to state 73
+    COMMA   shift, and go to state 74
+
+
+State 64
+
+   25 block_stmt: LBRACE statement_list RBRACE •
+
+    $default  reduce using rule 25 (block_stmt)
+
+
+State 65
+
+   20 assignment_stmt: IDENTIFIER ASSIGN expression •
+
+    $default  reduce using rule 20 (assignment_stmt)
+
+
+State 66
+
+   44 primary: LPAREN expression RPAREN •
+
+    $default  reduce using rule 44 (primary)
+
+
+State 67
+
+   33 additive: additive PLUS multiplicative •
+   36 multiplicative: multiplicative • STAR unary
+   37               | multiplicative • SLASH unary
+   38               | multiplicative • PERCENT unary
+
+    STAR     shift, and go to state 58
+    SLASH    shift, and go to state 59
+    PERCENT  shift, and go to state 60
+
+    $default  reduce using rule 33 (additive)
+
+
+State 68
+
+   34 additive: additive MINUS multiplicative •
+   36 multiplicative: multiplicative • STAR unary
+   37               | multiplicative • SLASH unary
+   38               | multiplicative • PERCENT unary
+
+    STAR     shift, and go to state 58
+    SLASH    shift, and go to state 59
+    PERCENT  shift, and go to state 60
+
+    $default  reduce using rule 34 (additive)
+
+
+State 69
+
+   36 multiplicative: multiplicative STAR unary •
+
+    $default  reduce using rule 36 (multiplicative)
+
+
+State 70
+
+   37 multiplicative: multiplicative SLASH unary •
+
+    $default  reduce using rule 37 (multiplicative)
+
+
+State 71
+
+   38 multiplicative: multiplicative PERCENT unary •
+
+    $default  reduce using rule 38 (multiplicative)
+
+
+State 72
+
+   22 scanf_stmt: FMT_SCANF LPAREN format_string COMMA • var_list RPAREN
+
+    AMPERSAND  shift, and go to state 75
+
+    var_list  go to state 76
+
+
+State 73
+
+   23 printf_stmt: FMT_PRINTF LPAREN format_string RPAREN •
+
+    $default  reduce using rule 23 (printf_stmt)
+
+
+State 74
+
+   24 printf_stmt: FMT_PRINTF LPAREN format_string COMMA • arg_list RPAREN
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    arg_list        go to state 77
+    expression      go to state 78
+    additive        go to state 45
+    multiplicative  go to state 46
+    unary           go to state 47
+    primary         go to state 48
+
+
+State 75
+
+   27 var_list: AMPERSAND • IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 79
+
+
+State 76
+
+   22 scanf_stmt: FMT_SCANF LPAREN format_string COMMA var_list • RPAREN
+   28 var_list: var_list • COMMA AMPERSAND IDENTIFIER
+
+    RPAREN  shift, and go to state 80
+    COMMA   shift, and go to state 81
+
+
+State 77
+
+   24 printf_stmt: FMT_PRINTF LPAREN format_string COMMA arg_list • RPAREN
+   30 arg_list: arg_list • COMMA expression
+
+    RPAREN  shift, and go to state 82
+    COMMA   shift, and go to state 83
+
+
+State 78
+
+   29 arg_list: expression •
+
+    $default  reduce using rule 29 (arg_list)
+
+
+State 79
+
+   27 var_list: AMPERSAND IDENTIFIER •
+
+    $default  reduce using rule 27 (var_list)
+
+
+State 80
+
+   22 scanf_stmt: FMT_SCANF LPAREN format_string COMMA var_list RPAREN •
+
+    $default  reduce using rule 22 (scanf_stmt)
+
+
+State 81
+
+   28 var_list: var_list COMMA • AMPERSAND IDENTIFIER
+
+    AMPERSAND  shift, and go to state 84
+
+
+State 82
+
+   24 printf_stmt: FMT_PRINTF LPAREN format_string COMMA arg_list RPAREN •
+
+    $default  reduce using rule 24 (printf_stmt)
+
+
+State 83
+
+   30 arg_list: arg_list COMMA • expression
+
+    MINUS          shift, and go to state 39
+    AMPERSAND      shift, and go to state 40
+    LPAREN         shift, and go to state 41
+    IDENTIFIER     shift, and go to state 42
+    INTEGER_CONST  shift, and go to state 43
+
+    expression      go to state 85
+    additive        go to state 45
+    multiplicative  go to state 46
+    unary           go to state 47
+    primary         go to state 48
+
+
+State 84
+
+   28 var_list: var_list COMMA AMPERSAND • IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 86
+
+
+State 85
+
+   30 arg_list: arg_list COMMA expression •
+
+    $default  reduce using rule 30 (arg_list)
+
+
+State 86
+
+   28 var_list: var_list COMMA AMPERSAND IDENTIFIER •
+
+    $default  reduce using rule 28 (var_list)
