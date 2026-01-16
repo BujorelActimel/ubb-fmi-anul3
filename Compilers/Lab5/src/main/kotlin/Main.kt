@@ -73,11 +73,13 @@ fun parseInput(grammarFile: String, inputFile: String) {
         // Create parser
         val parser = SLRParser(grammar, slrTable)
 
-        // Read input
-        val input = File(inputFile).readText().trim()
+        // Tokenize input file
+        println("Tokenizing: $inputFile")
+        val tokens = MLPTokenizer.tokenizeFile(inputFile)
+        println("Tokens: ${tokens.joinToString(" ")}\n")
 
-        // Parse input
-        val result = parser.parse(input)
+        // Parse tokenized input
+        val result = parser.parse(tokens)
 
         // Display results
         println(result)

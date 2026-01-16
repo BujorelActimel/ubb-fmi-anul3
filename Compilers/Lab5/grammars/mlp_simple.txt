@@ -1,0 +1,39 @@
+PROGRAM -> package id IMPORTS DECLS FUNCS
+IMPORTS -> import string
+IMPORTS -> ε
+DECLS -> DECL DECLS
+DECLS -> ε
+DECL -> const id TYPE assign EXPR
+DECL -> var id TYPE
+FUNCS -> FUNC FUNCS
+FUNCS -> ε
+FUNC -> func id lparen PARAMS rparen TYPE lbrace STMTS rbrace
+FUNC -> func id lparen PARAMS rparen lbrace STMTS rbrace
+PARAMS -> PARAMLIST
+PARAMS -> ε
+PARAMLIST -> PARAMDECL comma PARAMLIST
+PARAMLIST -> PARAMDECL
+PARAMDECL -> id TYPE
+TYPE -> int
+TYPE -> string
+TYPE -> bool
+STMTS -> STMT STMTS
+STMTS -> ε
+STMT -> id assign EXPR
+STMT -> id colonassign EXPR
+STMT -> return EXPR
+STMT -> if EXPR lbrace STMTS rbrace
+STMT -> if EXPR lbrace STMTS rbrace else lbrace STMTS rbrace
+STMT -> printf lparen fmtstr comma id rparen
+STMT -> scanf lparen fmtstr comma ampersand id rparen
+EXPR -> EXPR plus TERM
+EXPR -> EXPR minus TERM
+EXPR -> TERM
+TERM -> TERM mult FACTOR
+TERM -> TERM div FACTOR
+TERM -> FACTOR
+FACTOR -> id
+FACTOR -> intconst
+FACTOR -> string
+FACTOR -> lparen EXPR rparen
+FACTOR -> minus FACTOR
