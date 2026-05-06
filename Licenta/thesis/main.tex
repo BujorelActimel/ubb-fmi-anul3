@@ -1,0 +1,51 @@
+\documentclass[12pt]{report}
+
+\usepackage[language=english, type=bachelor]{style}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{}
+\chead{}
+\renewcommand{\headrulewidth}{0.2pt}
+\renewcommand{\footrulewidth}{0.2pt}
+
+\begin{document}
+
+\specialization{Computer Science}
+\title{Pseudo++: A Comprehensive Pseudocode Toolchain for Romanian Secondary Education}
+\author{Bujor Mihai Alexandru}
+\supervisor{Assoc. Prof. Rareș Florin Boian, PhD}
+
+\maketitle
+
+\newpage
+\thispagestyle{empty}
+\mbox{}
+\newpage
+\pagenumbering{roman}
+
+\cleardoublepage
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\vspace{0.5cm}
+\hrule
+\vspace{0.5cm}
+
+% Abstract in English: a brief summary of each chapter, emphasizing original contributions.
+
+
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+
+\input{chapters/chapter1_introduction}
+\input{chapters/chapter2_related_work}
+\input{chapters/chapter3_background}
+\input{chapters/chapter4_implementation}
+\input{chapters/chapter5_evaluation}
+\input{chapters/chapter6_conclusions}
+
+\bibliography{references}
+
+\end{document}
