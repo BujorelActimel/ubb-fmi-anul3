@@ -1,20 +1,415 @@
 \chapter{Theoretical Background}
 \label{chap:background}
 
-\section{Formal Languages and Grammars}
-\label{sec:formal-languages}
+This chapter presents the theoretical foundations underpinning the Pseudo++ toolchain.
+It covers the Monaco editor and its Monarch tokenisation model used for syntax
+highlighting, the mechanics of incremental parsing via Tree-sitter, the conceptual
+distinctions between interpretation and transpilation together with Pseudo++'s
+bifurcated pipeline, the structured-programming basis for loop equivalence
+transformations, the WebAssembly execution model, and the snapshot-based approach
+used by the reversible debugger.
 
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Monaco Editor and Monarch Tokenisation}
+\label{sec:monaco-monarch}
+
+\subsection{Monaco Editor}
+
+Monaco Editor \cite{monaco} is the open-source code-editing component that powers
+Visual Studio Code.  It is written in TypeScript and runs entirely in the browser,
+providing a full-featured editing experience --- line numbers, bracket matching, glyph
+margins, decorations, and theming --- without a server-side component.
+
+Monaco separates two language-related concerns:
+
+\begin{itemize}
+  \item \textbf{Tokenisation} --- assigning a visual token class (keyword, string,
+        operator, comment, \ldots) to each contiguous run of characters for the
+        purpose of syntax highlighting.
+  \item \textbf{Language services} --- richer, semantic operations such as
+        auto-completion, hover information, and diagnostics, which require a deeper
+        understanding of the language structure.
+\end{itemize}
+
+Pseudo++ uses Monaco for its web editor, registering a custom language
+(\texttt{pseudocode}) and providing both a Monarch tokeniser (Section~\ref{subsec:monarch})
+and a language configuration (bracket pairs, auto-closing, comment tokens).
+
+\subsection{The Monarch Tokeniser Model}
+\label{subsec:monarch}
+
+Monarch \cite{monarch} is Monaco's declarative tokeniser specification language.
+A Monarch grammar is a JavaScript object describing a \textit{finite-state transducer}:
+it has a set of \textit{states}, and each state contains an ordered list of
+\textit{rules} of the form $(\mathit{regex}, \mathit{action})$.
+
+The tokeniser processes the input line by line.  In state $q$, it tries each rule's
+regex against the current position; the first match fires the associated action, which
+emits a token class and optionally transitions to a new state.  This gives Monarch the
+expressive power of a \textit{regular language} per state, with the ability to
+represent richer patterns (e.g.\ multi-line strings) through state transitions.
+
+For the Pseudo++ language, the single \texttt{root} state suffices.  Rules recognise,
+in priority order: comments (\texttt{\#\ldots}), string literals, numbers, the
+swap and assignment operators (\texttt{<->}, \texttt{<-}), comparison operators, the
+floor brackets (\texttt{[}, \texttt{]}), and finally identifiers --- which are
+dispatched through case-insensitive keyword tables
+(\texttt{controlKeywords}, \texttt{flowKeywords}, \texttt{builtinFunctions},
+\texttt{logicalOperators}) to assign the appropriate token class, falling back to
+\texttt{variable} for unknown identifiers.
+
+\subsection{Monarch vs.\ Tree-sitter}
+
+Monarch and Tree-sitter serve complementary but distinct roles in Pseudo++:
+
+\begin{itemize}
+  \item \textbf{Monarch} runs entirely in JavaScript inside Monaco, is
+        regex-based, and operates line by line.  It is fast enough to re-tokenise
+        the visible viewport on every keystroke, producing token classes consumed
+        directly by Monaco's renderer.  It has no notion of nesting, scope, or
+        grammatical structure.
+
+  \item \textbf{Tree-sitter} runs as a WebAssembly module compiled from C, performs
+        full incremental GLR parsing, and produces a concrete syntax tree (CST)
+        encoding the complete grammatical structure of the program.  It is used
+        exclusively by the interpreter and transpiler for execution and code
+        generation.
+\end{itemize}
+
+The two tools are never in conflict: Monarch makes the editor \textit{look}
+right; Tree-sitter makes execution \textit{work} right.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Syntactic Analysis and Incremental Parsing}
 \label{sec:parsing}
 
-\section{Interpretation, Compilation, and Transpilation}
+\subsection{Classical Parsing Approaches}
+
+Given a grammar $G$ and an input string $w$, a \textit{parser} determines whether
+$w \in L(G)$ and, if so, constructs a parse tree witnessing the derivation.  Two
+broad families of algorithms exist:
+
+\begin{itemize}
+  \item \textbf{Top-down parsers} (e.g.\ LL($k$), recursive descent) expand the
+        start symbol top-down.  They are simple to implement and produce intuitive
+        error messages, but require the grammar to be left-recursion-free and
+        left-factorable.
+
+  \item \textbf{Bottom-up parsers} (e.g.\ LR($k$), LALR(1)) shift tokens onto a
+        stack and reduce them by grammar rules.  They handle a strictly larger class
+        of grammars than LL parsers and are the basis for most production parser
+        generators (\texttt{yacc}, \texttt{bison}, \texttt{menhir}).
+\end{itemize}
+
+\subsection{Tree-sitter and Incremental GLR Parsing}
+
+Tree-sitter \cite{treesitter} is an open-source parsing framework that generates
+Generalised LR (GLR) parsers from a grammar described in a JavaScript DSL.  Its
+defining feature is \textit{incremental re-parsing}: when the source text changes,
+the parser does not restart from scratch but instead re-uses unchanged subtrees from
+the previous parse tree.
+
+Formally, let $T$ be a concrete syntax tree (CST) for source $s$, and let $s'$ be
+the result of applying an edit $\delta$ to $s$.  Tree-sitter maintains a set of
+\textit{valid subtrees} --- nodes whose byte ranges are unaffected by $\delta$ ---
+and constructs $T'$ by re-parsing only the minimal affected region, grafting in the
+cached subtrees.  The amortised complexity of an edit of size $k$ is $O(k \log n)$
+where $n = |s|$ \cite{treesitter-thesis}.  In Pseudo++, Tree-sitter is invoked
+each time the user requests execution or transpilation, giving an always up-to-date
+CST without redundant full re-parses.
+
+\subsection{Concrete vs.\ Abstract Syntax Trees}
+
+Tree-sitter produces \textit{concrete syntax trees} (CSTs), which contain every
+token including punctuation and delimiter tokens.  By contrast, an
+\textit{abstract syntax tree} (AST) retains only semantically meaningful nodes.
+
+Pseudo++ works directly on the CST exposed by Tree-sitter's C API.  Node types
+are string-tagged (\texttt{ts\_node\_type}), and named fields (e.g.\
+\texttt{condition}, \texttt{var}, \texttt{start}) allow the interpreter and
+transpiler to locate child nodes by role rather than by index.  This design avoids
+a separate lowering pass to an AST while retaining the benefits of a typed node API.
+
+\subsection{Error Recovery}
+
+Tree-sitter employs a built-in error-recovery strategy: when the parser encounters
+an unexpected token, it inserts \texttt{ERROR} and \texttt{MISSING} nodes into the
+tree rather than aborting.  The resulting tree is always complete (every byte of
+input appears in some node) and serves as a basis for incremental syntax-error
+diagnostics.  Pseudo++'s linter traverses the tree looking for these sentinel nodes
+and reports their location to the user.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Interpretation and Transpilation}
 \label{sec:interpretation-transpilation}
 
+\subsection{Interpreters}
+
+An \textit{interpreter} is a program that directly executes a source program without
+producing standalone machine code.  Interpreters can be categorised by the
+intermediate representation they operate on:
+
+\begin{enumerate}
+  \item \textbf{Tree-walking interpreters} traverse the AST/CST and evaluate each
+        node in turn.  They are simple to implement and straightforward to extend, at
+        the cost of performance compared to bytecode approaches.
+
+  \item \textbf{Bytecode interpreters} first compile to an intermediate bytecode
+        (e.g.\ CPython's \texttt{.pyc}), then execute it in a virtual machine.
+        This separation allows optimisations such as constant folding.
+
+  \item \textbf{JIT compilers} (e.g.\ LuaJIT, V8) profile execution and
+        dynamically compile hot paths to native machine code.
+\end{enumerate}
+
+Pseudo++ uses a \textit{stack-based tree-walking interpreter}: an explicit execution
+stack mirrors the nesting of syntactic constructs, converting what would otherwise be
+recursive C calls into an iterative state machine.  Each stack frame carries a
+\textit{phase} counter that encodes progress through the frame's sub-steps, making
+the execution granularity uniform --- exactly one statement per step --- which is a
+prerequisite for the debugger's snapshot mechanism (Section~\ref{sec:snapshots}).
+
+\subsection{Transpilation}
+
+\textit{Transpilation} (source-to-source compilation) is a form of compilation where
+the target is another high-level language.  Well-known examples include
+TypeScript-to-JavaScript (\texttt{tsc}), Sass-to-CSS, and Babel's ES2022-to-ES5
+lowering.  In the educational domain, transpilation from a didactic notation to a
+production language serves as a scaffolding device: students write in familiar
+pseudocode and observe the idiomatic equivalent in C or Pascal.
+
+Pseudo++'s transpiler performs a single-pass tree walk over the CST, emitting
+target-language code for each node.  A pre-pass (\texttt{transpiler\_collect}) scans
+all assignment targets to produce the forward variable declarations required by C
+and Pascal, since both languages mandate that all variables are declared before use.
+
+\subsection{The Pseudo++ Processing Pipeline}
+\label{subsec:pipeline}
+
+After parsing, the CST is passed to one of two independent backends depending on
+the user's intent.  Figure~\ref{fig:pipeline} shows the complete pipeline.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  node distance  = 7mm and 22mm,
+  box/.style     = {draw, rounded corners=3pt, minimum width=34mm,
+                    minimum height=9mm, align=center, font=\small},
+  arr/.style     = {-{Stealth[length=4pt]}, thick},
+  lbl/.style     = {font=\footnotesize\itshape},
+]
+  \node[box] (src)   {Source};
+  \node[box, below=of src]  (lint)  {Linter};
+  \node[box, below=of lint] (parse) {Parser (Tree-sitter)};
+
+  \node[box, below left =14mm and 22mm of parse] (interp) {Interpreter\\(tree-walk)};
+  \node[box, below right=14mm and 22mm of parse] (trans)  {Transpiler\\(code gen)};
+
+  \node[box, below=of interp] (out1) {Program Output};
+  \node[box, below=of trans]  (out2) {C / C++ / Pascal};
+
+  \draw[arr] (src)   -- (lint);
+  \draw[arr] (lint)  -- (parse);
+  \draw[arr] (parse) -- node[lbl, above left ]{run}       (interp);
+  \draw[arr] (parse) -- node[lbl, above right]{transpile} (trans);
+  \draw[arr] (interp) -- (out1);
+  \draw[arr] (trans)  -- (out2);
+\end{tikzpicture}
+\caption{The Pseudo++ processing pipeline.  After normalisation and parsing, the
+CST is handed to either the interpreter or the transpiler depending on the requested
+operation.}
+\label{fig:pipeline}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Equivalence of Repetitive Control Structures}
 \label{sec:loop-equivalence}
 
+\subsection{Structured Programming and the Böhm-Jacopini Theorem}
+
+The theoretical basis for loop equivalence lies in \textit{structured programming
+theory}.  Böhm and Jacopini proved in 1966 \cite{bohm-jacopini} that any computable
+function can be expressed using only three control-flow primitives: sequence,
+selection (\texttt{if}), and a single repetition construct.  A practical consequence
+is that the four loop forms commonly found in procedural languages ---
+\textit{for}, \textit{while}, \textit{do-while}, and \textit{repeat-until} --- are
+mutually interconvertible: any loop can be rewritten using any other form, at the
+cost of at most a guard condition or an unrolled first iteration.
+
+This is not merely an academic curiosity.  The Romanian high-school computer science
+curriculum \cite{romanian-curriculum} explicitly teaches all four loop forms and
+expects students to identify and apply these transformations in examination problems.
+Providing an automated, interactive converter therefore has direct pedagogical value.
+
+\subsection{Semantics of the Four Loop Forms}
+
+Let $B$ denote the loop body (a finite sequence of statements), $C$ a Boolean
+condition, $i$ a counter variable, $a$ the initial value, $b$ the bound, and $s > 0$
+the step size.  The four loops have the following denotational semantics:
+
+\begin{itemize}
+  \item \textbf{for}: execute $B$ for $i = a,\, a{+}s,\, \ldots$ while $i \leq b$;
+        zero or more iterations.
+  \item \textbf{while}: while $C$, execute $B$; zero or more iterations.
+  \item \textbf{do-while}: execute $B$, then repeat while $C$; at least one
+        iteration.
+  \item \textbf{repeat-until}: execute $B$, then repeat until $C$
+        (i.e.\ while $\neg C$); at least one iteration.
+\end{itemize}
+
+The key structural distinction is between \textit{pre-test} loops (\textit{while},
+\textit{for}) that may execute zero times, and \textit{post-test} loops
+(\textit{do-while}, \textit{repeat-until}) that always execute at least once.
+Crossing the boundary between the two families requires a guard.
+
+\subsection{Transformation Rules}
+
+The following semantics-preserving rewrite rules hold unconditionally:
+
+\paragraph{while $\to$ do-while (and back).}
+\[
+  \textbf{while } C \;\textbf{do}\; B
+  \;\;\equiv\;\;
+  \textbf{if } C \;\textbf{then}\; (\textbf{do}\; B \;\textbf{while}\; C)
+\]
+\[
+  \textbf{do}\; B \;\textbf{while}\; C
+  \;\;\equiv\;\;
+  B\,;\;\textbf{while } C \;\textbf{do}\; B
+\]
+
+\paragraph{for $\to$ while.}
+\[
+  \textbf{for}\; i \leftarrow a,\, b,\, s \;\textbf{do}\; B
+  \;\;\equiv\;\;
+  i \leftarrow a\,;\;\textbf{while}\; i \leq b \;\textbf{do}\; (B\,;\;i \leftarrow i + s)
+\]
+
+\paragraph{repeat-until $\to$ while (and back).}
+\[
+  \textbf{repeat}\; B \;\textbf{until}\; C
+  \;\;\equiv\;\;
+  B\,;\;\textbf{while}\; \neg C \;\textbf{do}\; B
+\]
+
+By composing these four base rules, all twelve directed pairwise conversions among
+the four loop forms can be derived.  Pseudo++'s \texttt{equivalence} module
+implements each conversion as a text-level rewrite over the CST, preserving the
+original source indentation.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{WebAssembly}
 \label{sec:webassembly}
 
-\section{Program State Snapshots for Reversible Debugging}
+\subsection{Overview}
+
+WebAssembly (Wasm) \cite{wasm-spec} is a binary instruction format for a
+stack-based virtual machine, standardised by the W3C in 2019.  Its design goals are
+portability, safety, and near-native execution speed in the browser.  A WebAssembly
+module is a self-contained binary (\texttt{.wasm}) that exports and imports named
+functions; the host (typically a JavaScript runtime) provides imports and calls
+exports.
+
+Key properties of the Wasm execution model:
+
+\begin{itemize}
+  \item \textbf{Linear memory}: a contiguous, byte-addressable memory region whose
+        size is a multiple of 64~KiB.  The C heap and stack both reside in linear
+        memory; pointer arithmetic is valid within this region.
+
+  \item \textbf{Type safety}: all instructions are typed; the validator rejects
+        ill-typed modules before execution.
+
+  \item \textbf{Sandboxing}: a Wasm module cannot access host memory outside its
+        own linear memory or perform arbitrary I/O; all interaction with the outside
+        world happens through explicitly imported functions.
+
+  \item \textbf{Determinism}: aside from NaN bit-patterns, Wasm execution is fully
+        deterministic.
+\end{itemize}
+
+\subsection{Emscripten}
+
+Emscripten \cite{emscripten} is an LLVM-based compiler toolchain that compiles C
+and C++ to WebAssembly together with a JavaScript glue layer.  Given a C source
+file, Emscripten compiles it to LLVM IR via \texttt{clang}, lowers it to Wasm
+via \texttt{wasm-ld} and \texttt{wasm-opt}, and generates a JavaScript companion
+(\texttt{.js}) that instantiates the module, provides standard C library shims,
+and exposes exported C functions to JavaScript callers.
+
+Functions to be exported must be annotated with \texttt{EMSCRIPTEN\_KEEPALIVE}
+to prevent dead-code elimination, or listed via the
+\texttt{-sEXPORTED\_FUNCTIONS} linker flag.
+
+\subsection{Application in Pseudo++}
+
+The Pseudo++ interpreter is written in C23 and compiled to Wasm via Emscripten.
+A thin bridge layer (\texttt{wasm/bridge.c}) exposes the interpreter lifecycle
+and I/O routines:
+
+\begin{verbatim}
+EMSCRIPTEN_KEEPALIVE runtime_t* runtime_create_buffered(void);
+EMSCRIPTEN_KEEPALIVE exec_state_t runtime_step(runtime_t* rt);
+EMSCRIPTEN_KEEPALIVE const char* runtime_pop_output(runtime_t* rt);
+EMSCRIPTEN_KEEPALIVE void runtime_push_input(runtime_t* rt,
+                                              const char* line);
+\end{verbatim}
+
+The I/O abstraction layer (\texttt{io\_buffered}) replaces the standard
+\texttt{stdio} calls with a queue-based mechanism: output is pushed into a string
+queue that JavaScript drains via \texttt{runtime\_pop\_output}, and input is
+delivered by JavaScript calling \texttt{runtime\_push\_input} before the
+interpreter requests it.  This non-blocking design ensures the browser's event
+loop is never stalled by a long-running computation.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Statement-Level Step-Through Debugging}
 \label{sec:snapshots}
+
+\subsection{Interactive Debugging in Educational Contexts}
+
+Step-through debugging allows a student to observe a program's behaviour one
+statement at a time, inspecting variable values and control flow at each point.
+This is particularly valuable when learning programming: rather than reading static
+code, the student sees the program \textit{in motion} --- which variable changes,
+which branch is taken, how a loop counter evolves.
+
+Pseudo++'s debugger exposes two user-facing operations:
+
+\begin{itemize}
+  \item \textbf{Step Into} (one statement at a time): executes the next statement,
+        highlights the corresponding source line in the editor, and updates the
+        variable inspection panel.
+  \item \textbf{Continue} (run to completion): resumes fast execution without
+        step-by-step visibility, stopping only when the program finishes, encounters
+        a runtime error, or needs user input.
+\end{itemize}
+
+\subsection{Per-Step State Capture}
+
+At each Step Into, the runtime first serialises the complete program state into
+a \texttt{runtime\_snapshot\_t} structure before advancing execution.  A snapshot
+records:
+
+\begin{itemize}
+  \item the variable environment: name, value, and type for every variable currently
+        in scope;
+  \item the execution stack: frame type, phase counter, loop bounds, loop counter,
+        loop variable name, and the identity of the current CST node for each
+        active frame;
+  \item auxiliary I/O state: the multi-variable read index and a pending-input flag;
+  \item the current line number and execution-state enum.
+\end{itemize}
+
+The snapshot identifier is stored by the JavaScript \texttt{PseudoDebugger} class
+alongside the cached variable values and condition-evaluation metadata for that step.
+Variable values are cached on the JavaScript side so that the variable panel can be
+refreshed without an additional round-trip to the Wasm module.
+
+\subsection{Condition Visualisation}
+
+When the statement about to execute is a conditional or loop guard, the runtime
+additionally serialises the condition expression text and its boolean result into a
+small JSON object.  The front-end displays this beneath the variable panel, letting
+the student see not only \textit{which} branch was taken but \textit{why} ---
+the exact condition text and its evaluated truth value at that step.

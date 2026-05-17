@@ -1,0 +1,56 @@
+\begin{thebibliography}{1}
+
+\bibitem{treesitter-thesis}
+Max Brunsfeld.
+\newblock An incremental parsing system for programming tools.
+\newblock Master's thesis, Massachusetts Institute of Technology, 2018.
+
+\bibitem{treesitter}
+Max Brunsfeld et~al.
+\newblock Tree-sitter: An incremental parsing system for programming tools.
+\newblock In {\em Proceedings of the {USENIX} Workshop on Hot Topics in
+  Operating Systems (HotOS)}, 2018.
+
+\bibitem{bohm-jacopini}
+Corrado Böhm and Giuseppe Jacopini.
+\newblock Flow diagrams, turing machines and languages with only two formation
+  rules.
+\newblock {\em Communications of the {ACM}}, 9(5):366--371, 1966.
+
+\bibitem{reversible-debugging}
+Jakob Engblom.
+\newblock A review of reverse debugging.
+\newblock In {\em Proceedings of the 2012 System, Software, {SoC} and Silicon
+  Debug Conference (S4D)}, pages 1--6, 2012.
+
+\bibitem{wasm-spec}
+Andreas Haas, Andreas Rossberg, Derek Schuff, Ben Titzer, Dan Gohman, Luke
+  Wagner, Alon Zakai, JF~Bastien, and Michael Holman.
+\newblock {WebAssembly} specification.
+\newblock Technical report, World Wide Web Consortium ({W3C}), 2019.
+
+\bibitem{monaco}
+{Microsoft Corporation}.
+\newblock Monaco editor.
+\newblock \url{https://microsoft.github.io/monaco-editor/}, 2016.
+
+\bibitem{monarch}
+{Microsoft Corporation}.
+\newblock Monarch: Create declarative language syntax highlighters.
+\newblock \url{https://microsoft.github.io/monaco-editor/monarch.html}, 2016.
+
+\bibitem{romanian-curriculum}
+{Ministerul Educa\c{t}iei Na\c{t}ionale}.
+\newblock Programa \c{s}colar\u{a} pentru disciplina informatic\u{a}, clasele
+  {IX--XII}.
+\newblock Technical report, Ministerul Educa\c{t}iei Na\c{t}ionale al
+  Rom\^{a}niei, 2004.
+
+\bibitem{emscripten}
+Alon Zakai.
+\newblock Emscripten: An {LLVM}-to-{JavaScript} compiler.
+\newblock In {\em Proceedings of the {ACM} International Conference Companion
+  on Object Oriented Programming Systems Languages and Applications
+  ({OOPSLA})}, pages 301--312, 2011.
+
+\end{thebibliography}

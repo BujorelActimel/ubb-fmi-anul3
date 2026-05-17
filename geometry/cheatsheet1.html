@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cheatsheet Geometrie — Parțial 1</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #faf9f7;
+    --text: #1a1a1a;
+    --accent: #b71c1c;
+    --accent2: #1565c0;
+    --section-bg: #1a1a2e;
+    --section-text: #f5f5f5;
+    --formula-bg: #f0eeeb;
+    --border: #d4d0c8;
+    --note: #555;
+    --label: #b71c1c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: var(--text);
+    background: var(--bg);
+    padding: 8mm 10mm;
+  }
+
+  @media print {
+    body { padding: 5mm 8mm; font-size: 9.5pt; }
+    .section { break-inside: avoid; }
+    .page-break { page-break-before: always; }
+    @page { margin: 8mm; size: A4; }
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 18pt;
+    font-weight: 700;
+    color: var(--section-bg);
+    margin-bottom: 2px;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 9pt;
+    color: var(--note);
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+
+  hr.title-line {
+    border: none;
+    height: 2px;
+    background: var(--section-bg);
+    margin-bottom: 10px;
+  }
+
+  .columns {
+    column-count: 2;
+    column-gap: 14px;
+  }
+
+  .section {
+    break-inside: avoid;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    background: var(--section-bg);
+    color: var(--section-text);
+    font-size: 9.5pt;
+    font-weight: 700;
+    padding: 3px 8px;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  .item {
+    margin: 2px 0;
+    padding: 1px 0 1px 6px;
+  }
+
+  .item-label {
+    font-weight: 700;
+    color: var(--label);
+    font-size: 9pt;
+    display: block;
+    margin-bottom: 0px;
+  }
+
+  .formula {
+    background: var(--formula-bg);
+    padding: 2px 6px;
+    margin: 1px 0 3px 0;
+    border-left: 2px solid var(--accent);
+    font-size: 10pt;
+  }
+
+  .formula-inline {
+    padding: 1px 4px;
+    margin: 1px 0;
+    font-size: 10pt;
+  }
+
+  .note {
+    font-size: 8.5pt;
+    color: var(--note);
+    padding-left: 8px;
+    margin: 1px 0;
+  }
+
+  .note-list {
+    font-size: 8.5pt;
+    color: var(--note);
+    padding-left: 16px;
+    margin: 1px 0;
+  }
+
+  .cases {
+    margin: 2px 0 3px 6px;
+    font-size: 9pt;
+  }
+  .cases div {
+    padding: 1px 0;
+  }
+
+  .katex { font-size: 1em !important; }
+  .formula .katex { font-size: 1.02em !important; }
+
+  .two-col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>CHEATSHEET GEOMETRIE — Parțial 1</h1>
+<div class="subtitle">Seminarele 1–6 · Vectori · Produs scalar / vectorial / mixt · Dreapta · Planul</div>
+<hr class="title-line">
+
+<div class="columns">
+
+<!-- ==================== SECTION 1 ==================== -->
+<div class="section">
+<div class="section-title">1. VECTORI LIBERI (Sem. 1)</div>
+
+<div class="item">
+  <span class="item-label">Regula triunghiului:</span>
+  <div class="formula">$\vec{AB} + \vec{BC} = \vec{AC}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Centrul de greutate G al △ABC:</span>
+  <div class="formula">$G = \left(\frac{x_A+x_B+x_C}{3},\; \frac{y_A+y_B+y_C}{3},\; \frac{z_A+z_B+z_C}{3}\right)$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Mijlocul segmentului [AB]:</span>
+  <div class="formula">$M = \left(\frac{x_A+x_B}{2},\; \frac{y_A+y_B}{2},\; \frac{z_A+z_B}{2}\right)$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">ABCD paralelogram:</span>
+  <div class="formula">$D = A + C - B$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Coliniaritate în plan:</span>
+  <div class="formula">$\vec{a} \| \vec{b} \iff a_1 b_2 - a_2 b_1 = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Bisectoarea AD a unghiului A în △ABC:</span>
+  <div class="formula-inline">$D$ împarte $BC$ în raportul $\frac{BD}{DC} = \frac{\|\vec{AB}\|}{\|\vec{AC}\|} = \frac{c}{b}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Combinație liniară:</span>
+  <div class="formula-inline">$\vec{c} = \lambda\vec{a} + \mu\vec{b}$ → sistem de ecuații în $\lambda, \mu$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 2 ==================== -->
+<div class="section">
+<div class="section-title">2. PRODUSUL SCALAR (Sem. 2)</div>
+
+<div class="item">
+  <span class="item-label">Definiție:</span>
+  <div class="formula">$\vec{a} \cdot \vec{b} = \|\vec{a}\| \cdot \|\vec{b}\| \cdot \cos\alpha$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">În coordonate:</span>
+  <div class="formula">$\vec{a} \cdot \vec{b} = a_1 b_1 + a_2 b_2 + a_3 b_3$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Lungimea vectorului:</span>
+  <div class="formula">$\|\vec{a}\| = \sqrt{a_1^2 + a_2^2 + a_3^2}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Cosinusul unghiului:</span>
+  <div class="formula">$\cos\alpha = \frac{a_1 b_1 + a_2 b_2 + a_3 b_3}{\|\vec{a}\| \cdot \|\vec{b}\|}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Perpendicularitate:</span>
+  <div class="formula">$\vec{a} \perp \vec{b} \iff \vec{a} \cdot \vec{b} = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Proprietăți utile:</span>
+  <div class="formula">$\|\vec{a} + \vec{b}\|^2 = \|\vec{a}\|^2 + 2(\vec{a}\cdot\vec{b}) + \|\vec{b}\|^2$</div>
+  <div class="formula">$\|\vec{a} - \vec{b}\|^2 = \|\vec{a}\|^2 - 2(\vec{a}\cdot\vec{b}) + \|\vec{b}\|^2$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Proiecția scalară a lui $\vec{a}$ pe $\vec{b}$:</span>
+  <div class="formula">$\text{pr}_{\vec{b}}(\vec{a}) = \frac{\vec{a} \cdot \vec{b}}{\|\vec{b}\|}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Proiecția vectorială a lui $\vec{a}$ pe $\vec{b}$:</span>
+  <div class="formula">$\text{proj}_{\vec{b}}(\vec{a}) = \frac{\vec{a} \cdot \vec{b}}{\|\vec{b}\|^2} \cdot \vec{b}$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 3 ==================== -->
+<div class="section">
+<div class="section-title">3. PRODUSUL VECTORIAL (Sem. 3)</div>
+
+<div class="item">
+  <span class="item-label">Norma:</span>
+  <div class="formula">$\|\vec{a} \times \vec{b}\| = \|\vec{a}\| \cdot \|\vec{b}\| \cdot \sin\alpha$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">În coordonate:</span>
+  <div class="formula">$\vec{a} \times \vec{b} = \begin{vmatrix} \vec{i} & \vec{j} & \vec{k} \\ a_1 & a_2 & a_3 \\ b_1 & b_2 & b_3 \end{vmatrix}$</div>
+  <div class="formula">$= (a_2 b_3 - a_3 b_2)\vec{i} - (a_1 b_3 - a_3 b_1)\vec{j} + (a_1 b_2 - a_2 b_1)\vec{k}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Arii:</span>
+  <div class="formula-inline">Aria paralelogramului $= \|\vec{a} \times \vec{b}\|$ · Aria triunghiului $= \frac{1}{2}\|\vec{a} \times \vec{b}\|$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Proprietăți:</span>
+  <div class="formula-inline">$\vec{a} \times \vec{b} = -(\vec{b} \times \vec{a})$ · $\vec{a} \times \vec{b} = \vec{0} \iff \vec{a} \| \vec{b}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Înălțimea din B pe AC:</span>
+  <div class="formula">$h_B = \frac{\|\vec{BA} \times \vec{BC}\|}{\|\vec{AC}\|}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Dist. între laturile paralele (paralelogram pe $\vec{a}, \vec{b}$):</span>
+  <div class="formula-inline">$h = \frac{\|\vec{a} \times \vec{b}\|}{\|\vec{a}\|}$ (la latura pe $\vec{a}$) · $h = \frac{\|\vec{a} \times \vec{b}\|}{\|\vec{b}\|}$ (la latura pe $\vec{b}$)</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Dublu produs vectorial:</span>
+  <div class="formula">$(\vec{a} \times \vec{b}) \times \vec{c} = (\vec{a}\cdot\vec{c})\vec{b} - (\vec{b}\cdot\vec{c})\vec{a}$</div>
+  <div class="formula">$\vec{a} \times (\vec{b} \times \vec{c}) = (\vec{a}\cdot\vec{c})\vec{b} - (\vec{a}\cdot\vec{b})\vec{c}$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 4 ==================== -->
+<div class="section">
+<div class="section-title">4. PRODUSUL MIXT (Sem. 3)</div>
+
+<div class="item">
+  <span class="item-label">Definiție:</span>
+  <div class="formula">$(\vec{a}, \vec{b}, \vec{c}) = (\vec{a} \times \vec{b}) \cdot \vec{c}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">În coordonate:</span>
+  <div class="formula">$(\vec{a}, \vec{b}, \vec{c}) = \begin{vmatrix} a_1 & a_2 & a_3 \\ b_1 & b_2 & b_3 \\ c_1 & c_2 & c_3 \end{vmatrix}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Volume:</span>
+  <div class="formula-inline">Volum paralelipiped $= |(\vec{a}, \vec{b}, \vec{c})|$ · Volum tetraedru $= \frac{1}{6}|(\vec{a}, \vec{b}, \vec{c})|$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Coplanaritate:</span>
+  <div class="formula">$\vec{a}, \vec{b}, \vec{c}$ coplanari $\iff (\vec{a}, \vec{b}, \vec{c}) = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Volum tetraedru ABCD:</span>
+  <div class="formula">$V = \frac{1}{6}\left|\det(\vec{AB}, \vec{AC}, \vec{AD})\right|$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Produse de 4 vectori:</span>
+  <div class="formula">$(\vec{a}\times\vec{b})\cdot(\vec{c}\times\vec{d}) = (\vec{a}\cdot\vec{c})(\vec{b}\cdot\vec{d}) - (\vec{b}\cdot\vec{c})(\vec{a}\cdot\vec{d})$</div>
+  <div class="formula">$(\vec{a}\times\vec{b})\times(\vec{c}\times\vec{d}) = (\vec{a},\vec{b},\vec{d})\vec{c} - (\vec{a},\vec{b},\vec{c})\vec{d}$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 5 ==================== -->
+<div class="section">
+<div class="section-title">5. DREAPTA ÎN PLAN (Sem. 4)</div>
+
+<div class="item">
+  <span class="item-label">Ecuații parametrice:</span>
+  <div class="formula">$x = x_0 + l\cdot t, \quad y = y_0 + m\cdot t$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Ecuația canonică:</span>
+  <div class="formula">$\frac{x - x_0}{l} = \frac{y - y_0}{m}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Prin două puncte:</span>
+  <div class="formula">$\frac{x - x_1}{x_2 - x_1} = \frac{y - y_1}{y_2 - y_1}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Ecuația explicită:</span>
+  <div class="formula">$y = kx + b$ &nbsp; ($k$ = pantă, $b$ = tăietura pe $Oy$)</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Ecuația generală:</span>
+  <div class="formula">$Ax + By + C = 0$</div>
+  <div class="note">Vector normal: $\vec{n}(A, B)$ · Vector director: $\vec{a}(-B, A)$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Prin tăieturi:</span>
+  <div class="formula">$\frac{x}{a} + \frac{y}{b} = 1$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Fascicul de drepte:</span>
+  <div class="formula">$\lambda(A_1 x + B_1 y + C_1) + \mu(A_2 x + B_2 y + C_2) = 0$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 6 ==================== -->
+<div class="section">
+<div class="section-title">6. UNGHIURI ȘI DISTANȚE ÎN PLAN (Sem. 4)</div>
+
+<div class="item">
+  <span class="item-label">Unghi între drepte (ec. generale):</span>
+  <div class="formula">$\cos\theta = \frac{|A_1 A_2 + B_1 B_2|}{\sqrt{A_1^2+B_1^2}\cdot\sqrt{A_2^2+B_2^2}}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Unghi (ec. explicite):</span>
+  <div class="formula">$\tan\theta = \frac{|k_1 - k_2|}{|1 + k_1 k_2|}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Perpendicularitate:</span>
+  <div class="formula-inline">$A_1 A_2 + B_1 B_2 = 0$ &nbsp;sau&nbsp; $1 + k_1 k_2 = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Paralelism:</span>
+  <div class="formula-inline">$A_1 B_2 - A_2 B_1 = 0$ &nbsp;sau&nbsp; $k_1 = k_2$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Distanța punct–dreaptă:</span>
+  <div class="formula">$d(M_0, \Delta) = \frac{|Ax_0 + By_0 + C|}{\sqrt{A^2 + B^2}}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Simetricul punctului $P$ față de dreapta $\Delta$:</span>
+  <div class="note-list">1) Perpendiculara din $P$ pe $\Delta$: vector director = $\vec{n}$ al dreptei</div>
+  <div class="note-list">2) Găsești piciorul perpendicularei $P'$</div>
+  <div class="note-list">3) Simetricul: $S = 2P' - P$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 7 ==================== -->
+<div class="section">
+<div class="section-title">7. BISECTOARE (Sem. 4)</div>
+
+<div class="item">
+  <span class="item-label">Bisectoarele a două drepte:</span>
+  <div class="formula">$\frac{A_1 x + B_1 y + C_1}{\sqrt{A_1^2+B_1^2}} = \pm\frac{A_2 x + B_2 y + C_2}{\sqrt{A_2^2+B_2^2}}$</div>
+  <div class="note">Fiecare semn dă câte o bisectoare (interioară / exterioară).</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 8 ==================== -->
+<div class="section">
+<div class="section-title">8. ECUAȚIA PLANULUI ÎN SPAȚIU (Sem. 5)</div>
+
+<div class="item">
+  <span class="item-label">Ecuații parametrice:</span>
+  <div class="formula">$\begin{cases} x = x_0 + l_1 u + l_2 v \\ y = y_0 + m_1 u + m_2 v \\ z = z_0 + n_1 u + n_2 v \end{cases}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Ecuația generală:</span>
+  <div class="formula">$Ax + By + Cz + D = 0$ &nbsp; Vector normal: $\vec{n}(A, B, C)$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Plan prin $M_0$ paralel cu $\vec{a_1}, \vec{a_2}$:</span>
+  <div class="formula">$\begin{vmatrix} x-x_0 & y-y_0 & z-z_0 \\ l_1 & m_1 & n_1 \\ l_2 & m_2 & n_2 \end{vmatrix} = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Plan prin 3 puncte $M_1, M_2, M_3$:</span>
+  <div class="formula">$\begin{vmatrix} x-x_1 & y-y_1 & z-z_1 \\ x_2-x_1 & y_2-y_1 & z_2-z_1 \\ x_3-x_1 & y_3-y_1 & z_3-z_1 \end{vmatrix} = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Prin tăieturi:</span>
+  <div class="formula">$\frac{x}{a} + \frac{y}{b} + \frac{z}{c} = 1$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Conversie parametrice → generală:</span>
+  <div class="formula-inline">$\vec{n} = \vec{a_1} \times \vec{a_2}$ → $n_1(x-x_0) + n_2(y-y_0) + n_3(z-z_0) = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Distanța punct–plan:</span>
+  <div class="formula">$d = \frac{|Ax_0 + By_0 + Cz_0 + D|}{\sqrt{A^2 + B^2 + C^2}}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Fascicul de plane (prin dreapta de intersecție):</span>
+  <div class="formula">$\alpha(A_1 x+B_1 y+C_1 z+D_1) + \beta(A_2 x+B_2 y+C_2 z+D_2) = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Snop de plane (prin punct comun la 3 plane):</span>
+  <div class="formula">$\alpha(\Pi_1) + \beta(\Pi_2) + \gamma(\Pi_3) = 0$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 9 ==================== -->
+<div class="section">
+<div class="section-title">9. UNGHIURI ȘI DISTANȚE ÎNTRE PLANE (Sem. 5–6)</div>
+
+<div class="item">
+  <span class="item-label">Unghiul între două plane:</span>
+  <div class="formula">$\cos\alpha = \frac{|A_1 A_2 + B_1 B_2 + C_1 C_2|}{\sqrt{A_1^2+B_1^2+C_1^2}\cdot\sqrt{A_2^2+B_2^2+C_2^2}}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Perpendicularitate plane:</span>
+  <div class="formula-inline">$A_1 A_2 + B_1 B_2 + C_1 C_2 = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Paralelism plane:</span>
+  <div class="formula-inline">$\frac{A_1}{A_2} = \frac{B_1}{B_2} = \frac{C_1}{C_2}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Distanța între plane paralele:</span>
+  <div class="note">Alegi un punct de pe un plan și calculezi distanța la celălalt.</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Abaterea punctului față de plan (cu semn):</span>
+  <div class="formula">$\delta(M_0, \Pi) = \frac{Ax_0+By_0+Cz_0+D}{\pm\sqrt{A^2+B^2+C^2}}$</div>
+  <div class="note">Semnul la radical: termenul liber să fie negativ. $\delta < 0$: partea originii; $|\delta|$ = distanța.</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 10 ==================== -->
+<div class="section">
+<div class="section-title">10. POZIȚIA RELATIVĂ A 3 PLANE</div>
+
+<div class="item">
+  <div class="note">$m$ = matricea coef. $(3\times3)$, $M$ = matricea extinsă $(3\times4)$, $\Delta = \det(m)$.</div>
+  <div class="cases">
+    <div>$\Delta \neq 0$ → se intersectează într-un <b>punct</b></div>
+    <div>$\Delta=0,\; rg(m)=2,\; rg(M)=3$, normali necoliniari 2 câte 2 → 3 drepte <b>paralele</b></div>
+    <div>$\Delta=0,\; rg(m)=2,\; rg(M)=3$, 2 normali coliniari → 2 plane paralele, al 3-lea le taie</div>
+    <div>$\Delta=0,\; rg(m)=2,\; rg(M)=2$, normali necoliniari → trec prin <b>aceeași dreaptă</b></div>
+    <div>$\Delta=0,\; rg(m)=2,\; rg(M)=2$, 2 coliniari → 2 coincid, al 3-lea le taie</div>
+    <div>$rg(m)=1,\; rg(M)=3$ → 3 plane <b>paralele distincte</b></div>
+    <div>$rg(m)=1,\; rg(M)=2$ → 2 coincid, al 3-lea paralel</div>
+    <div>$rg(m)=1,\; rg(M)=1$ → toate 3 <b>coincid</b></div>
+  </div>
+</div>
+</div>
+
+<!-- ==================== SECTION 11 ==================== -->
+<div class="section">
+<div class="section-title">11. DREAPTA ÎN SPAȚIU (Sem. 5–6)</div>
+
+<div class="item">
+  <span class="item-label">Ecuații parametrice:</span>
+  <div class="formula">$x = x_0 + lt, \quad y = y_0 + mt, \quad z = z_0 + nt$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Ecuații canonice:</span>
+  <div class="formula">$\frac{x-x_0}{l} = \frac{y-y_0}{m} = \frac{z-z_0}{n}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Prin două puncte:</span>
+  <div class="formula">$\frac{x-x_1}{x_2-x_1} = \frac{y-y_1}{y_2-y_1} = \frac{z-z_1}{z_2-z_1}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Dreaptă ca intersecție de 2 plane:</span>
+  <div class="formula-inline">Vector director $= \vec{n_1} \times \vec{n_2}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Distanța punct–dreaptă:</span>
+  <div class="formula">$d = \frac{\|(\vec{r_1} - \vec{r_0}) \times \vec{a}\|}{\|\vec{a}\|}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Unghiul dintre două drepte:</span>
+  <div class="formula">$\cos\alpha = \frac{|l_1 l_2 + m_1 m_2 + n_1 n_2|}{\|\vec{a_1}\|\cdot\|\vec{a_2}\|}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Perpendicularitate:</span>
+  <div class="formula-inline">$l_1 l_2 + m_1 m_2 + n_1 n_2 = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Paralelism:</span>
+  <div class="formula-inline">$\frac{l_1}{l_2} = \frac{m_1}{m_2} = \frac{n_1}{n_2}$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 12 ==================== -->
+<div class="section">
+<div class="section-title">12. POZIȚIA RELATIVĂ A DREPTELOR ÎN SPAȚIU (Sem. 5–6)</div>
+
+<div class="item">
+  <div class="note">$\vec{a_1}, \vec{a_2}$ = vectori directori; $\vec{M_1 M_2}$ = vectorul dintre puncte.</div>
+  <span class="item-label">Calculezi:</span>
+  <div class="formula">$D = \begin{vmatrix} x_2-x_1 & y_2-y_1 & z_2-z_1 \\ l_1 & m_1 & n_1 \\ l_2 & m_2 & n_2 \end{vmatrix}$</div>
+</div>
+
+<div class="item">
+  <div class="cases">
+    <div>$\vec{a_1} \| \vec{a_2}$ și $\vec{M_1 M_2} \| \vec{a_1}$ → <b>coincid</b></div>
+    <div>$\vec{a_1} \| \vec{a_2}$ și $\vec{M_1 M_2} \nmid \vec{a_1}$ → <b>paralele distincte</b></div>
+    <div>$\vec{a_1} \nmid \vec{a_2}$ și $D = 0$ → <b>concurente</b></div>
+    <div>$\vec{a_1} \nmid \vec{a_2}$ și $D \neq 0$ → <b>strambe</b></div>
+  </div>
+</div>
+
+<div class="item">
+  <span class="item-label">Distanța între drepte strambe:</span>
+  <div class="formula">$d = \frac{|D|}{\|\vec{a_1} \times \vec{a_2}\|}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Distanța între paralele:</span>
+  <div class="formula">$d = \frac{\|\vec{M_1 M_2} \times \vec{a}\|}{\|\vec{a}\|}$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 13 ==================== -->
+<div class="section">
+<div class="section-title">13. RELAȚII DREAPTĂ–PLAN (Sem. 6)</div>
+
+<div class="item">
+  <span class="item-label">Unghiul dreaptă–plan:</span>
+  <div class="formula">$\sin\varphi = \frac{|Al+Bm+Cn|}{\sqrt{A^2+B^2+C^2}\cdot\sqrt{l^2+m^2+n^2}}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Dreaptă paralelă cu planul:</span>
+  <div class="formula-inline">$Al + Bm + Cn = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Dreaptă perpendiculară pe plan:</span>
+  <div class="formula-inline">$\frac{A}{l} = \frac{B}{m} = \frac{C}{n}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Dreaptă conținută în plan:</span>
+  <div class="formula-inline">$Al+Bm+Cn=0$ ȘI $Ax_0+By_0+Cz_0+D=0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Plan determinat de 2 drepte concurente (prin $M_0$):</span>
+  <div class="formula">$\begin{vmatrix} x-x_0 & y-y_0 & z-z_0 \\ l_1 & m_1 & n_1 \\ l_2 & m_2 & n_2 \end{vmatrix} = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Plan prin dreaptă + punct exterior:</span>
+  <div class="formula">$\begin{vmatrix} x-x_1 & y-y_1 & z-z_1 \\ x_2-x_1 & y_2-y_1 & z_2-z_1 \\ l & m & n \end{vmatrix} = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Plan prin 2 drepte paralele (prin $M_1, M_2$, v.d. comun $\vec{a}$):</span>
+  <div class="formula">$\begin{vmatrix} x-x_1 & y-y_1 & z-z_1 \\ x_2-x_1 & y_2-y_1 & z_2-z_1 \\ l & m & n \end{vmatrix} = 0$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 14 ==================== -->
+<div class="section">
+<div class="section-title">14. PROIECȚII ȘI SIMETRICE (Sem. 5–6)</div>
+
+<div class="item">
+  <span class="item-label">Proiecția lui $M_0$ pe plan $Ax+By+Cz+D=0$:</span>
+  <div class="formula">$\begin{cases} Ax+By+Cz+D=0 \\ \frac{x-x_0}{A} = \frac{y-y_0}{B} = \frac{z-z_0}{C} \end{cases}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Simetricul față de plan:</span>
+  <div class="formula-inline">Găsești proiecția $P'$, apoi $S = 2P' - M_0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Proiecția lui $M_1$ pe dreaptă:</span>
+  <div class="formula">$\begin{cases} \frac{x-x_0}{l} = \frac{y-y_0}{m} = \frac{z-z_0}{n} \\ (x-x_1)l + (y-y_1)m + (z-z_1)n = 0 \end{cases}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Simetricul față de dreaptă:</span>
+  <div class="formula-inline">Găsești proiecția $P'$, apoi $S = 2P' - M_0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Proiecția dreptei pe plan (dreapta nu e $\perp$ pe plan):</span>
+  <div class="formula">$\begin{cases} \begin{vmatrix} x-x_0 & y-y_0 & z-z_0 \\ l & m & n \\ A & B & C \end{vmatrix} = 0 \\ Ax+By+Cz+D = 0 \end{cases}$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 15 ==================== -->
+<div class="section">
+<div class="section-title">15. PERPENDICULARA COMUNĂ (Sem. 6)</div>
+
+<div class="item">
+  <span class="item-label">Vector director:</span>
+  <div class="formula">$\vec{v} = \vec{a_1} \times \vec{a_2}$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Ecuații:</span>
+  <div class="formula">$\begin{vmatrix} x-x_1 & y-y_1 & z-z_1 \\ l_1 & m_1 & n_1 \\ v_1 & v_2 & v_3 \end{vmatrix} = 0$</div>
+  <div class="formula">$\begin{vmatrix} x-x_2 & y-y_2 & z-z_2 \\ l_2 & m_2 & n_2 \\ v_1 & v_2 & v_3 \end{vmatrix} = 0$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Lungimea perp. comune = distanța între strambe:</span>
+  <div class="formula">$d = \frac{|D|}{\|\vec{a_1} \times \vec{a_2}\|}$</div>
+</div>
+</div>
+
+<!-- ==================== SECTION 16 ==================== -->
+<div class="section">
+<div class="section-title">16. DETERMINANȚI — REMINDER</div>
+
+<div class="item">
+  <span class="item-label">Determinant 2×2:</span>
+  <div class="formula">$\begin{vmatrix} a & b \\ c & d \end{vmatrix} = ad - bc$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Determinant 3×3 (Sarrus):</span>
+  <div class="formula">$\begin{vmatrix} a_1 & a_2 & a_3 \\ b_1 & b_2 & b_3 \\ c_1 & c_2 & c_3 \end{vmatrix} = a_1 b_2 c_3 + a_2 b_3 c_1 + a_3 b_1 c_2 - a_3 b_2 c_1 - a_2 b_1 c_3 - a_1 b_3 c_2$</div>
+</div>
+
+<div class="item">
+  <span class="item-label">Rangul matricei:</span>
+  <div class="formula-inline">$rg(A)$ = ordinul celui mai mare minor nenul.</div>
+</div>
+</div>
+
+</div><!-- end columns -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+
+</body>
+</html>
