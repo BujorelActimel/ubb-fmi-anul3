@@ -230,10 +230,12 @@ operation.}
 The theoretical basis for loop equivalence lies in \textit{structured programming
 theory}.  Böhm and Jacopini proved in 1966 \cite{bohm-jacopini} that any computable
 function can be expressed using only three control-flow primitives: sequence,
-selection (\texttt{if}), and a single repetition construct.  A practical consequence
-is that the four loop forms commonly found in procedural languages ---
-\textit{for}, \textit{while}, \textit{do-while}, and \textit{repeat-until} --- are
-mutually interconvertible: any loop can be rewritten using any other form, at the
+selection (\texttt{if}), and a single repetition construct.  This result, together
+with Dijkstra's influential argument against unstructured jumps \cite{dijkstra1968goto},
+established the primacy of structured loops in procedural programming.
+A practical consequence is that the four loop forms commonly found in procedural
+languages --- \textit{for}, \textit{while}, \textit{do-while}, and
+\textit{repeat-until} --- are mutually interconvertible: any loop can be rewritten using any other form, at the
 cost of at most a guard condition or an unrolled first iteration.
 
 This is not merely an academic curiosity.  The Romanian high-school computer science
@@ -303,8 +305,8 @@ original source indentation.
 
 \subsection{Overview}
 
-WebAssembly (Wasm) \cite{wasm-spec} is a binary instruction format for a
-stack-based virtual machine, standardised by the W3C in 2019.  Its design goals are
+WebAssembly (Wasm) \cite{haas2017wasm,wasm-spec} is a binary instruction
+format for a stack-based virtual machine, standardised by the W3C in 2019.  Its design goals are
 portability, safety, and near-native execution speed in the browser.  A WebAssembly
 module is a self-contained binary (\texttt{.wasm}) that exports and imports named
 functions; the host (typically a JavaScript runtime) provides imports and calls
@@ -372,7 +374,14 @@ Step-through debugging allows a student to observe a program's behaviour one
 statement at a time, inspecting variable values and control flow at each point.
 This is particularly valuable when learning programming: rather than reading static
 code, the student sees the program \textit{in motion} --- which variable changes,
-which branch is taken, how a loop counter evolves.
+which branch is taken, how a loop counter evolves \cite{wing2006ct}.
+
+The ability to step \emph{backwards} through execution history --- so-called
+\textit{omniscient} or \textit{reversible} debugging \cite{lewis2003omniscient,reversible-debugging}
+--- extends this further by letting the developer inspect state at any previous
+point without restarting the program.  Pseudo++'s snapshot architecture
+(Section~\ref{subsec:pipeline}) provides the foundation for this capability
+at the C runtime level.
 
 Pseudo++'s debugger exposes two user-facing operations:
 

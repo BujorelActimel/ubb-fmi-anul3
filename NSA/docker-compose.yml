@@ -1,0 +1,158 @@
+name: nsa
+
+services:
+
+  # ── Nginx: reverse proxy + load balancer ────────────────────────
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+      - goaccess_report:/var/www/logs
+    depends_on:
+      - webapp1
+      - webapp2
+      - phpmyadmin
+    restart: unless-stopped
+
+  # ── Web app replica 1 ────────────────────────────────────────────
+  webapp1:
+    build: ./webapp
+    environment:
+      DB_DSN:     app:app@tcp(mysql-master:3306)/bookshelf?parseTime=true
+      JWT_SECRET: "${JWT_SECRET:-super-secret-change-me}"
+      SMTP_HOST:  mailpit
+      SMTP_PORT:  "1025"
+      MAIL_FROM:  noreply@nsa.test
+      DOMAIN:     nsa.test
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Web app replica 2 ────────────────────────────────────────────
+  webapp2:
+    build: ./webapp
+    environment:
+      DB_DSN:     app:app@tcp(mysql-master:3306)/bookshelf?parseTime=true
+      JWT_SECRET: "${JWT_SECRET:-super-secret-change-me}"
+      SMTP_HOST:  mailpit
+      SMTP_PORT:  "1025"
+      MAIL_FROM:  noreply@nsa.test
+      DOMAIN:     nsa.test
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── MySQL master ─────────────────────────────────────────────────
+  mysql-master:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE:      bookshelf
+      MYSQL_USER:          app
+      MYSQL_PASSWORD:      app
+    volumes:
+      - mysql_master_data:/var/lib/mysql
+      - ./mysql/master.cnf:/etc/mysql/conf.d/replication.cnf:ro
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # ── MySQL slave ──────────────────────────────────────────────────
+  mysql-slave:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE:      bookshelf
+      MYSQL_USER:          app
+      MYSQL_PASSWORD:      app
+    volumes:
+      - mysql_slave_data:/var/lib/mysql
+      - ./mysql/slave.cnf:/etc/mysql/conf.d/replication.cnf:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Replication setup (runs once then exits) ─────────────────────
+  mysql-setup:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+    command: >
+      bash -c "
+        mysql -h mysql-slave -u root -prootpass -e \"
+          CHANGE REPLICATION SOURCE TO
+            SOURCE_HOST='mysql-master',
+            SOURCE_USER='replicator',
+            SOURCE_PASSWORD='repl_pass',
+            SOURCE_AUTO_POSITION=1;
+          START REPLICA;
+        \"
+      "
+    restart: "no"
+
+  # ── phpMyAdmin ───────────────────────────────────────────────────
+  phpmyadmin:
+    image: phpmyadmin:latest
+    environment:
+      PMA_HOST:      mysql-master
+      PMA_USER:      root
+      PMA_PASSWORD:  rootpass
+    depends_on:
+      - mysql-master
+    restart: unless-stopped
+
+  # ── Mailpit (mail server + web UI) ──────────────────────────────
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"    # web UI
+    restart: unless-stopped
+
+  # ── GoAccess (log analyzer) ──────────────────────────────────────
+  goaccess:
+    image: allinurl/goaccess:latest
+    command:
+      - "--no-global-config"
+      - "--log-format=COMBINED"
+      - "--output=/srv/report.html"
+      - "--real-time-html"
+      - "--addr=0.0.0.0"
+      - "--port=7890"
+      - "--ws-url=wss://nsa.test:8443/ws"
+      - "/var/log/nginx/requests.log"
+    ports:
+      - "7890:7890"
+    volumes:
+      - nginx_logs:/var/log/nginx:ro
+      - goaccess_report:/srv
+    depends_on:
+      - nginx
+    restart: unless-stopped
+
+volumes:
+  mysql_master_data:
+  mysql_slave_data:
+  nginx_logs:
+  goaccess_report:

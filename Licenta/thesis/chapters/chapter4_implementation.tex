@@ -1,50 +1,749 @@
 \chapter{The Pseudo++ Toolchain}
 \label{chap:implementation}
 
+This chapter describes the design and implementation of the Pseudo++ toolchain,
+a complete software pipeline for writing, executing, debugging, and transpiling
+Romanian-style pseudocode as taught at the Romanian high-school level.
+The toolchain is written in C (core library) and JavaScript (web editor,
+Tree-sitter grammar), and is distributed as a native command-line binary
+and a browser-based editor that comes bundled with the core implementation
+compiled to WebAssembly.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{System Architecture}
 \label{sec:architecture}
 
+The Pseudo++ toolchain is structured as four layers of independent modules,
+each with a narrow public interface. Figure~\ref{fig:modules} shows the
+compile-time dependency graph of all modules grouped by layer.
+
+\begin{figure}[h]
+\centering
+\resizebox{0.85\linewidth}{!}{%
+\begin{tikzpicture}[
+    product/.style = {
+        draw, line width=1.2pt, rounded corners=6pt,
+        font=\small, align=center, inner sep=10pt
+    },
+    build/.style = {
+        draw, line width=1pt, rounded corners=5pt,
+        font=\small, align=center, inner sep=8pt
+    },
+    cmod/.style = {
+        draw=gray!45, rounded corners=3pt,
+        minimum width=3.2cm, minimum height=0.9cm,
+        font=\small\ttfamily, align=center, fill=white
+    },
+    arr/.style = {-Stealth, line width=1.2pt},
+]
+
+%% ── C Core Library ──────────────────────────────────────────────────────
+\begin{pgfonlayer}{background}
+  \fill[teal!7, rounded corners=10pt]
+    (-1.0,-0.65) rectangle (13.8, 5.5);
+  \draw[teal!35, line width=1pt, rounded corners=10pt]
+    (-1.0,-0.65) rectangle (13.8, 5.5);
+\end{pgfonlayer}
+\node[font=\small\bfseries\color{teal!55!black}, anchor=north west]
+  at (-0.8, 5.45) {C Core Library};
+
+%% Capabilities row (y = 3.9)  — teal tint marks the top layer
+\node[cmod, fill=teal!5] (rt) at (2.0,  3.9) {runtime + debugger};
+\node[cmod, fill=teal!5] (tr) at (6.5,  3.9) {transpiler};
+\node[cmod, fill=teal!5] (eq) at (11.0, 3.9) {equivalence};
+
+%% Foundation row (y = 2.3)
+\node[cmod] (parse) at (2.0,  2.3) {parser (Tree-sitter)};
+\node[cmod] (lint)  at (6.5,  2.3) {linter};
+\node[cmod] (io)    at (11.0, 2.3) {I/O abstraction};
+
+%% Utilities row (y = 0.7)
+\node[cmod] (env)  at (2.0,  0.7) {environment};
+\node[cmod] (str)  at (6.5,  0.7) {string};
+\node[cmod] (hmap) at (11.0, 0.7) {hashmap};
+
+%% ── WebAssembly build ────────────────────────────────────────────────
+\node[build, fill=violet!8, draw=violet!45,
+      minimum width=5.0cm, minimum height=1.0cm]
+  (wasm) at (2.9, 7.15)
+  {{\bfseries WebAssembly Module}\\[2pt]
+   {\footnotesize compiled with Emscripten}};
+
+%% ── Products ─────────────────────────────────────────────────────────
+\node[product, fill=blue!7, draw=blue!45,
+      minimum width=5.2cm, minimum height=1.55cm]
+  (web) at (2.9, 9.4)
+  {{\bfseries Web Editor}\\[4pt]
+   {\footnotesize Monaco $\cdot$ Debugger $\cdot$ Transpile $\cdot$ Equivalence}};
+
+\node[product, fill=orange!9, draw=orange!50,
+      minimum width=4.4cm, minimum height=1.55cm]
+  (cli) at (10.5, 9.4)
+  {{\bfseries CLI}\\[4pt]
+   {\footnotesize run $\cdot$ lint $\cdot$ parse}\\[1pt]
+   {\footnotesize transpile $\cdot$ equivalence}};
+
+%% ── Arrows ───────────────────────────────────────────────────────────
+\draw[arr, blue!55]
+  (web.south) -- node[right, font=\footnotesize\itshape, text=blue!55]
+  {JavaScript calls} (wasm.north);
+
+\draw[arr, violet!60]
+  (wasm.south) -- node[right, font=\footnotesize\itshape, text=violet!55]
+  {native C API} (2.9, 5.5);
+
+\draw[arr, orange!70!black]
+  (cli.south) -- (10.5, 5.5);
+
+\end{tikzpicture}%
+}
+\label{fig:modules}
+\end{figure}
+
+The modules and their responsibilities are:
+
+\begin{description}
+  \item[\texttt{linter}] Normalises the raw source text before parsing: it
+        replaces Unicode mathematical symbols (e.g.\ $\leq$, $\neq$) with
+        their ASCII equivalents and re-indents the code structurally.
+
+  \item[\texttt{parser}] Wraps the Tree-sitter incremental parser with the
+        custom \texttt{pseudo} grammar, exposes the resulting concrete syntax
+        tree (CST), and provides helper utilities for navigating and extracting
+        text from CST nodes.
+
+  \item[\texttt{runtime}] Implements the tree-walking interpreter.  It
+        subdivides into three sub-modules: \texttt{value} (runtime values and
+        arithmetic), \texttt{environment} (variable store), and
+        \texttt{interpreter} (execution engine with explicit stack).
+
+  \item[\texttt{debugger}] Extends the interpreter with snapshot-based
+        reversible execution, variable inspection, and JSON serialisation of
+        runtime state for the browser front end.
+
+  \item[\texttt{transpiler}] Converts the CST to equivalent C, C++, or Pascal
+        source, performing a two-pass analysis: first collecting variable types,
+        then emitting the target code.
+
+  \item[\texttt{equivalence}] Implements loop-equivalence transformations,
+        converting a loop construct of one kind (e.g.\ \texttt{for}) into any
+        of the other three (\texttt{while}, \texttt{do\_while}, \texttt{repeat})
+        while preserving semantics.
+
+  \item[\texttt{io}] Provides an abstract I/O interface with two concrete
+        backends: \texttt{io\_stdio} for the CLI and \texttt{io\_buffered} for
+        the WebAssembly build.
+
+  \item[\texttt{wasm}] An Emscripten bridge that exports the runtime,
+        transpiler, and equivalence module as \texttt{EMSCRIPTEN\_KEEPALIVE}
+        C functions callable from JavaScript.
+
+  \item[\texttt{cli}] The command-line entry point, supporting \texttt{run},
+        \texttt{transpile}, \texttt{debug}, \texttt{parse-tree}, and
+        \texttt{equivalence} sub-commands.
+\end{description}
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Language Grammar}
 \label{sec:grammar}
 
-\section{Source Normalization}
+The grammar for the Pseudo++ language is specified as a Tree-sitter
+\cite{treesitter} grammar in JavaScript (\texttt{grammar.js}).  It defines
+the complete syntax of the Romanian high-school pseudocode dialect, following
+the conventions used in the Romanian baccalaureate exam \cite{romanian-curriculum}.
+
+\subsection{Statement Forms}
+
+The top-level production \texttt{program} is a repetition of \texttt{stmt}
+nodes.  Each statement is one of:
+
+\begin{itemize}
+  \item \textbf{Assignment} (\texttt{assign}):
+        \texttt{x <- expr} --- assigns the value of \textit{expr} to variable
+        \texttt{x}.
+  \item \textbf{Swap} (\texttt{swap}):
+        \texttt{x <-> y} --- exchanges the values of \texttt{x} and \texttt{y}.
+  \item \textbf{Read} (\texttt{read}):
+        \texttt{citeste x, y, z} --- reads values from standard input.
+  \item \textbf{Write} (\texttt{write}):
+        \texttt{scrie expr1, expr2} --- writes values to standard output.
+  \item \textbf{Conditional} (\texttt{if}):
+        \texttt{daca} \textit{cond} \texttt{atunci} \ldots\
+        [\texttt{altfel} \ldots] \texttt{sf}.
+  \item \textbf{Counting loop} (\texttt{for}):
+        \texttt{pentru i <- start, end[, step] executa} \ldots\ \texttt{sf}.
+  \item \textbf{Pre-condition loop} (\texttt{while}):
+        \texttt{cat timp} \textit{cond} \texttt{executa} \ldots\ \texttt{sf}.
+  \item \textbf{Post-condition loop} (\texttt{do\_while}):
+        \texttt{executa} \ldots\ \texttt{cat timp} \textit{cond}.
+  \item \textbf{Repeat-until loop} (\texttt{repeat}):
+        \texttt{repeta} \ldots\ \texttt{pana cand} \textit{cond}.
+  \item \textbf{Compound statement} (\texttt{multi\_stmt}): two or more simple
+        statements separated by semicolons, used where only a single statement
+        is syntactically permitted.
+\end{itemize}
+
+\subsection{Expression Hierarchy}
+
+Expressions follow a standard precedence hierarchy encoded via Tree-sitter's
+\texttt{prec.left} operator:
+
+\begin{center}
+\begin{tabular}{c l l}
+\hline
+\textbf{Level} & \textbf{Operator(s)} & \textbf{Node type} \\
+\hline
+1 (lowest) & \texttt{SAU / sau}                        & \texttt{or\_expr} \\
+2          & \texttt{SI / si}                           & \texttt{and\_expr} \\
+3          & \texttt{NOT / not}                         & \texttt{not\_expr} \\
+4          & \texttt{= != < <= > >=}                    & \texttt{compare\_expr} \\
+5          & \texttt{+ -}                               & \texttt{add\_expr} \\
+6          & \texttt{* / \%}                            & \texttt{mul\_expr} \\
+7 (highest)& \texttt{-(x)}, \texttt{[x]}, $\sqrt{x}$ & \texttt{neg\_expr}, \texttt{floor}, \texttt{sqrt\_expr} \\
+\hline
+\end{tabular}
+\end{center}
+
+Atoms (\texttt{atom}) are integer literals, floating-point literals, string
+literals, or identifiers.  Parenthesised sub-expressions (\texttt{paren}) reset
+precedence.  The floor operator uses bracket notation (\texttt{[expr]}), which
+maps to integer truncation, while the square-root operator uses the radical
+symbol ($\sqrt{\phantom{x}}$).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Source Normalisation}
 \label{sec:linter}
 
-\section{Parsing and AST Construction}
+The official Romanian high-school pseudocode notation \cite{romanian-curriculum},
+as it appears in textbooks and on baccalaureate exam papers, uses a rich set
+of Unicode characters: relational symbols ($\leq$, $\neq$, $\geq$), assignment and
+swap arrows ($\leftarrow$, $\leftrightarrow$), box-drawing characters for
+structural indentation (box-drawing bar), a filled square ($\blacksquare$) as the
+block-closing symbol instead of the keyword \texttt{sf}, and letters with
+Romanian diacritics.  This notation is the \emph{canonical} form of the
+language --- it is not incidental variation but the deliberate typographic
+standard taught in schools.
+
+Formalising this notation directly into a parser grammar would tightly couple
+the grammar to a specific Unicode encoding and make the language impractical to
+type in a plain-text environment.  The toolchain therefore introduces a
+deliberate split: the \emph{source language} that users write (and that the
+parser accepts) uses ASCII-compatible tokens, while the \emph{display language}
+visible in the web editor renders those tokens back into the canonical Unicode
+form via ligatures and glyph substitutions.  This rendering is purely visual
+and optional: a toggle button in the editor enables or disables it, leaving
+the underlying source file unchanged in either case.
+
+The linter is the bridge between the two representations.  It accepts source in
+either form --- canonical Unicode or ASCII --- and produces the normalised ASCII
+form consumed by the parser.  The normalisation pipeline consists of two passes:
+
+\paragraph{Pass 1 --- Symbol Substitution.}
+The linter maintains a static hash map that maps Unicode byte sequences to their
+ASCII equivalents (Table~\ref{tab:substitutions}).  The pass iterates through
+the source byte-by-byte, scanning the substitution map at each position for the
+longest matching key (a greedy, maximum-munch strategy).  When a match is found
+the corresponding replacement string is appended to the output and the cursor
+advances by the match length; otherwise the current byte is copied verbatim.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{l l l}
+\hline
+\textbf{Canonical input} & \textbf{Category} & \textbf{ASCII output} \\
+\hline
+$\leq$, $\neq$, $\geq$        & Relational symbols   & \texttt{<=}, \texttt{!=}, \texttt{>=} \\
+$\leftarrow$                   & Assignment arrow     & \texttt{<-} \\
+$\leftrightarrow$              & Swap arrow           & \texttt{<->} \\
+$\blacksquare$ (U+25A0)        & Block-close square   & \texttt{sf} \\
+box-drawing bar (U+2502)       & Structural indent    & 4 spaces \\
+\texttt{\textquotedblleft}, \texttt{\quotedblbase} & Curly quotes & \texttt{"} \\
+\textit{ă}, \textit{â}, \textit{î}, \textit{ș}, \textit{ț} & Romanian diacritics & \texttt{a}, \texttt{a}, \texttt{i}, \texttt{s}, \texttt{t} \\
+\hline
+\end{tabular}
+\caption{Selected substitution rules applied by the linter in Pass 1.
+  The canonical Unicode notation is the standard form used in Romanian
+  high-school textbooks and exam papers; the ASCII output is the form
+  accepted by the Tree-sitter grammar.}
+\label{tab:substitutions}
+\end{table}
+
+\paragraph{Pass 2 --- Structural Re-indentation.}
+After symbol substitution the source may have inconsistent indentation,
+particularly when the box-drawing indentation markers have been replaced by
+spaces.  The second pass strips all leading whitespace from every line and
+recomputes indentation from scratch based on a set of \emph{indent triggers}:
+
+\begin{itemize}
+  \item \textit{Indent-after} lines --- lines whose last word is \texttt{atunci},
+        \texttt{executa}, \texttt{altfel}, or whose first word is \texttt{repeta}
+        --- increase the indentation level for the next line.
+  \item \textit{Dedent-before} lines --- \texttt{sf} alone, \texttt{altfel} as
+        the first word, and the closing \texttt{pana cand} of a repeat loop ---
+        decrease the indentation level before the line is emitted.
+\end{itemize}
+
+The result is a clean, consistently-indented ASCII source that the Tree-sitter
+parser can analyse reliably.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Parsing and CST Construction}
 \label{sec:parsing-ast}
 
+The \texttt{parser} module wraps the Tree-sitter C API.  Its public interface
+centres on an opaque \texttt{parser\_t} struct that owns a
+\texttt{TSParser} (the Tree-sitter parser instance), a \texttt{TSTree} (the
+last parse result), and a copy of the normalised source string.
+
+\paragraph{Parsing.}
+\texttt{parser\_parse()} first copies the source, then calls
+\texttt{ts\_parser\_parse\_string()}.  Tree-sitter guarantees a result tree
+even on malformed input, using \texttt{ERROR} and \texttt{MISSING} synthetic
+nodes to indicate problem sites.  After the C API call, the function performs a
+depth-first walk of the resulting tree looking for the first such error node;
+if one is found, it reports the row and column of the error and constructs a
+human-readable diagnostic message.
+
+\paragraph{Node Helpers.}
+Because the interpreter and transpiler perform extensive tree traversal,
+\texttt{parser.c} also provides a set of helper functions used throughout the
+codebase:
+
+\begin{itemize}
+  \item \texttt{parser\_node\_is\_type(node, type)} --- string-compares the
+        node's grammar type against a constant.
+  \item \texttt{parser\_child\_by\_field(node, field)} --- wraps
+        \texttt{ts\_node\_child\_by\_field\_name}, used to retrieve named
+        children such as \texttt{condition}, \texttt{left}, \texttt{right},
+        \texttt{var}, \texttt{start}, \texttt{end}, and \texttt{step}.
+  \item \texttt{parser\_node\_text(parser, node)} --- extracts the source
+        substring corresponding to a node by using its start and end byte
+        offsets.
+  \item \texttt{parser\_pretty\_tree()} / \texttt{parser\_debug\_tree()} ---
+        produce human-readable renderings of the CST for diagnostic purposes.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Interpreter}
 \label{sec:interpreter}
 
 \subsection{Value Representation}
 \label{subsec:values}
 
+Runtime values are represented by a heap-allocated, tagged-union type
+\texttt{value\_t}:
+
+\begin{lstlisting}[language=C, basicstyle=\ttfamily\small]
+struct value {
+    value_type_t type;        /* VALUE_INT | VALUE_FLOAT | VALUE_STRING */
+    union {
+        int64_t   int_val;
+        double    float_val;
+        string_t* string_val;
+    };
+};
+\end{lstlisting}
+
+\noindent
+The three types cover the full range of values expressible in Romanian
+baccalaureate pseudocode.  The following design decisions govern arithmetic:
+
+\begin{itemize}
+  \item \textbf{Type promotion.}  When one operand is \texttt{VALUE\_FLOAT}
+        and the other is \texttt{VALUE\_INT}, the integer is promoted via
+        \texttt{value\_to\_float()} before the operation is applied.
+  \item \textbf{Division always yields a float.}
+        The \texttt{/} operator always returns a \texttt{double}, mirroring
+        the mathematical convention used in Romanian textbooks.  Integer
+        division is expressed explicitly with the floor operator \texttt{[a/b]}.
+  \item \textbf{Modulo operates on integers.}
+        The \texttt{\%} operator truncates both operands to \texttt{int64\_t}
+        before computing the remainder.
+  \item \textbf{Square root returns an integer when the result is exact.}
+        If \texttt{sqrt(d) == floor(sqrt(d))}, the result is returned as
+        \texttt{VALUE\_INT}.
+  \item \textbf{String concatenation.}
+        The \texttt{+} operator is overloaded: when both operands are strings
+        it performs concatenation; mixed string/numeric operands are a
+        type error.
+\end{itemize}
+
+Logical operations (\texttt{SI}, \texttt{SAU}, \texttt{NOT}) operate on the
+\emph{truthiness} of any value: a numeric zero and an empty string are false;
+everything else is true.  They always return \texttt{VALUE\_INT} (1 or 0).
+
+All arithmetic functions follow the same error-reporting convention: an
+optional \texttt{value\_error\_t* err} output parameter is set to
+\texttt{VALUE\_OK}, \texttt{VALUE\_ERR\_TYPE}, \texttt{VALUE\_ERR\_DIV\_ZERO},
+or \texttt{VALUE\_ERR\_NEGATIVE\_SQRT}.
+
 \subsection{Execution Environment}
 \label{subsec:environment}
+
+Variables are stored in a flat \texttt{environment\_t}, implemented as an
+open-addressing hash table with linear probing.  The table uses three slot
+states (\texttt{SLOT\_EMPTY}, \texttt{SLOT\_OCCUPIED}, \texttt{SLOT\_DELETED})
+to support deletion without disrupting existing probe chains.  The FNV-1a hash
+function \cite{fnv-hash} is used for string keys:
+
+\begin{lstlisting}[language=C, basicstyle=\ttfamily\small]
+static uint64_t hash_string(const char* str) {
+    uint64_t hash = 14695981039346656037ULL;
+    while (*str) {
+        hash ^= (uint64_t)(unsigned char)(*str++);
+        hash *= 1099511628211ULL;
+    }
+    return hash;
+}
+\end{lstlisting}
+
+The table starts with capacity 16.  When the combined occupancy of
+\texttt{OCCUPIED} and \texttt{DELETED} slots exceeds a 70\,\% load factor,
+\texttt{env\_resize()} doubles the capacity and rehashes all live entries.
+Ownership of values is transferred on set: the table takes ownership of
+the \texttt{value\_t*} passed to \texttt{env\_set()}, and the previous value
+(if any) is destroyed in place.
+
+An important semantic detail is that Pseudo++ variables are \emph{implicitly
+initialised}: reading an undeclared variable returns an integer zero and also
+creates the binding, matching the convention in Romanian textbook examples
+where variables are used before being formally assigned.
 
 \subsection{Expression Evaluation}
 \label{subsec:expressions}
 
+Expressions are evaluated by a recursive \texttt{eval\_expr()} function that
+walks the CST nodes produced by Tree-sitter.  For binary operators
+(\texttt{add\_expr}, \texttt{mul\_expr}, \texttt{compare\_expr}) the function
+extracts the named children \texttt{left}, \texttt{op}, and \texttt{right},
+evaluates the sub-expressions recursively, reads the operator text, and
+dispatches to the appropriate \texttt{value\_*} arithmetic function.
+
+Short-circuit evaluation is implemented for the logical connectives:
+\texttt{or\_expr} returns 1 immediately if the left operand is truthy without
+evaluating the right; \texttt{and\_expr} returns 0 immediately if the left
+operand is falsy.
+
+After each binary expression evaluation the runtime checks whether an error
+flag was set; if so, it transitions to the \texttt{EXEC\_ERROR} state and
+stores the error message, halting further execution.
+
 \subsection{Control Flow}
 \label{subsec:control-flow}
 
+The interpreter uses an \emph{explicit execution stack} rather than recursion.
+This design choice serves two goals: it prevents stack overflow for deeply
+nested pseudocode, and it allows the debugger to capture and restore the full
+execution state as a data structure.
+
+The stack holds up to \texttt{MAX\_STACK\_DEPTH} frames.  Each frame
+(\texttt{exec\_frame\_t}) records:
+
+\begin{itemize}
+  \item the \texttt{frame\_type\_t} (one of
+        \texttt{FRAME\_PROGRAM}, \texttt{FRAME\_BLOCK}, \texttt{FRAME\_IF},
+        \texttt{FRAME\_FOR}, \texttt{FRAME\_WHILE}, \texttt{FRAME\_DO\_WHILE},
+        \texttt{FRAME\_REPEAT});
+  \item the corresponding CST node;
+  \item a \texttt{phase} integer and \texttt{child\_idx} counter tracking
+        which part of the construct has already been executed;
+  \item loop-specific fields (\texttt{loop\_current}, \texttt{loop\_end},
+        \texttt{loop\_step}, \texttt{loop\_var}) for the \texttt{for} frame.
+\end{itemize}
+
+A compile-time dispatch table maps each frame type to its step function:
+
+\begin{lstlisting}[language=C, basicstyle=\ttfamily\small]
+static const frame_step_fn k_step_fns[] = {
+    [FRAME_PROGRAM]  = step_program,
+    [FRAME_IF]       = step_if,
+    [FRAME_FOR]      = step_for,
+    [FRAME_WHILE]    = step_while,
+    [FRAME_DO_WHILE] = step_do_while,
+    [FRAME_REPEAT]   = step_repeat,
+    [FRAME_BLOCK]    = step_block,
+};
+\end{lstlisting}
+
+Each step function advances the frame by one \emph{phase} and returns a
+Boolean indicating whether a \emph{visible action} occurred.  Visible actions
+include executing a simple statement, evaluating a loop condition, and
+terminating the program; invisible actions are internal transitions such as
+resetting \texttt{child\_idx} at the start of a new loop iteration.
+
+The public API exposes three execution modes:
+
+\begin{itemize}
+  \item \texttt{runtime\_step()} --- advances to the next visible action.
+        Used by the step-by-step debugger.
+  \item \texttt{runtime\_run()} --- runs to completion or the next input
+        request via a tight loop with no overhead.  Used by both the CLI
+        \texttt{run} command and the web editor's Run button.
+\end{itemize}
+
+The \texttt{EXEC\_NEEDS\_INPUT} state suspends execution when a \texttt{read}
+statement encounters an unavailable token.  The web front end supplies the
+missing token through \texttt{io\_buffered} and calls \texttt{runtime\_resume()}
+to continue.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Debugger}
 \label{sec:debugger}
 
+The debugger extends the interpreter with step-by-step execution and runtime
+state inspection, following the snapshot-based approach to reversible debugging
+described by Lewis \cite{lewis2003omniscient} and surveyed by Engblom
+\cite{reversible-debugging}.  The web editor exposes three operations:
+\textbf{Step Into} (advance one visible action), \textbf{Continue} (run to
+completion or the next input request), and \textbf{Stop}.  After each step,
+the front end displays the currently executing line, the full variable table,
+which variables changed since the last step, and --- when the step involved
+evaluating a condition --- the condition text and its boolean result.
+
+This is made possible by a \emph{snapshot-based} architecture in the C runtime
+that captures the complete interpreter state before every step.
+
+\paragraph{Snapshot structure.}
+A \texttt{runtime\_snapshot\_t} captures the complete interpreter state at a
+given execution point:
+
+\begin{itemize}
+  \item All variable bindings (name, value, and type) as a
+        \texttt{var\_info\_t} array.
+  \item The full execution stack: for each frame, its type, phase,
+        \texttt{child\_idx}, loop counters, and the \emph{start byte} of the
+        corresponding CST node.
+  \item The auxiliary fields \texttt{read\_var\_index},
+        \texttt{has\_pending\_read}, \texttt{current\_line}, and
+        \texttt{exec\_state}.
+\end{itemize}
+
+CST nodes are identified by their \texttt{start\_byte} offset (a
+\texttt{uint32\_t}) rather than by pointer.  On restoration,
+\texttt{find\_node\_by\_start()} locates the matching node in the unchanged
+CST.  Because the CST is never modified after parsing, this identity scheme is
+safe and avoids serialising the full tree.
+
+\paragraph{Circular buffer.}
+Snapshots are stored in a fixed-size circular buffer of \texttt{MAX\_SNAPSHOTS}
+entries, giving the JavaScript layer a history of past states it can replay
+without re-executing the program from the beginning.  When the buffer is full,
+the oldest snapshot is evicted.
+
+\paragraph{JSON serialisation.}
+The function \texttt{runtime\_get\_variables\_json()} serialises the current
+variable table to a JSON array of \texttt{\{name, value, type\}} objects, with
+proper JSON string escaping.  This JSON string is the primary mechanism by
+which the WebAssembly runtime communicates variable state to the JavaScript
+front end on each step.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Transpiler}
 \label{sec:transpiler}
 
 \subsection{Code Generation for C, C++, and Pascal}
 \label{subsec:codegen}
 
+The transpiler converts a normalised Pseudo++ CST to compilable source code in
+C, C++, or Pascal.  Because these three languages differ in significant ways ---
+type declarations, operator syntax, string literals, and logical keyword
+precedence --- the transpiler abstracts all language-specific choices into a
+\texttt{lang\_ops\_t} record populated once at construction time:
+
+\begin{lstlisting}[language=C, basicstyle=\ttfamily\small]
+typedef struct {
+    const char* assign_op;   /* "=" (C/C++) or ":=" (Pascal) */
+    const char* eq_op;       /* "==" or "="  */
+    const char* ne_op;       /* "!=" or "<>" */
+    const char* or_op;       /* "||" or "or" */
+    const char* and_op;      /* "&&" or "and"*/
+    const char* not_kw;      /* "!"  or "not " */
+    const char* floor_open;  /* "(int)(" or "trunc(" */
+    const char* floor_close; /* ")" */
+    bool is_pascal;
+    bool is_cpp;
+} lang_ops_t;
+\end{lstlisting}
+
+Transpilation proceeds in two passes:
+
+\paragraph{Pass 1 --- Variable Type Collection.}
+\texttt{collect\_vars()} performs a depth-first walk of the CST.  For each
+assignment or read statement it records the inferred type of the target
+variable in a hash map (\texttt{var\_types}).  The inference rules are:
+
+\begin{itemize}
+  \item If the right-hand-side expression contains a string literal, the
+        variable is typed as \texttt{string}.
+  \item If it contains a floating-point literal (a number with a decimal
+        point), it is typed as \texttt{double}.
+  \item Otherwise it is typed as \texttt{int}.
+\end{itemize}
+
+The first assignment wins for the purpose of code generation; subsequent
+assignments may change the value but not the declared type in the target
+language.  This is a transpiler-level heuristic, not a language restriction:
+the interpreter is fully dynamically typed and allows a variable to hold
+values of different types at different points in execution.
+
+\paragraph{Pass 2 --- Code Emission.}
+The emission pass walks the CST recursively via \texttt{gen\_stmt()}, using
+the \texttt{lang\_ops\_t} record to emit the correct syntax for each construct.
+Several language-specific concerns deserve mention:
+
+\begin{itemize}
+  \item \textbf{C variable declarations.}  C requires variables to be declared
+        before use.  Rather than adding a separate declaration section, the
+        transpiler hoists declarations \emph{inline}: the helper
+        \texttt{hoist\_vars()} scans each block before emitting its first
+        statement and pre-declares any variable first assigned or read in that
+        block.  A \texttt{declared\_vars} hash map prevents duplicate
+        declarations.  C strings are emitted as \texttt{char name[256]};
+        C++ strings use \texttt{std::string}.
+
+  \item \textbf{Pascal variable section.}  For Pascal, variable declarations
+        are collected globally during Pass 1 and emitted in a \texttt{var}
+        block at the top of the program before the \texttt{begin} keyword.
+
+  \item \textbf{Pascal logical operator precedence.}  In Pascal, \texttt{and}
+        and \texttt{or} bind \emph{more tightly} than comparison operators,
+        unlike C where \texttt{\&\&} and \texttt{||} bind less tightly.
+        To preserve semantics, the transpiler wraps each operand of an
+        \texttt{and\_expr} or \texttt{or\_expr} in parentheses when targeting
+        Pascal.
+
+  \item \textbf{Pascal string literals.}  String literals are enclosed in
+        single quotes in Pascal.  The transpiler re-encodes any embedded
+        single quotes using Pascal's doubling convention (\texttt{''}).
+\end{itemize}
+
 \subsection{Loop Equivalence Transformations}
 \label{subsec:loop-transforms}
 
+The loop equivalence module implements a pedagogically important feature:
+given any loop in a Pseudo++ program, it rewrites that loop into an
+equivalent form using a different loop construct, grounded in the
+interconvertibility established by Böhm and Jacopini \cite{bohm-jacopini}
+and the structured programming principles of Dijkstra \cite{dijkstra1968goto}.
+This allows students to practise the mechanical equivalence proofs required
+at the baccalaureate exam.
+
+The module accepts a source string, a 0-indexed target line identifying the
+loop to transform, and the desired output construct (\texttt{FOR},
+\texttt{WHILE}, \texttt{DO\_WHILE}, or \texttt{REPEAT}).  It then:
+
+\begin{enumerate}
+  \item Runs the source through the linter and parser to obtain a CST.
+  \item Locates the loop node at the specified line via DFS.
+  \item Extracts the loop header fields (\texttt{var}, \texttt{start},
+        \texttt{end}, \texttt{step}, \texttt{condition}) and body text from
+        the CST and the raw source string.
+  \item Constructs the target loop form by selecting the appropriate skeleton
+        and filling in the extracted fields.
+  \item Splices the new loop text back into the original source, preserving
+        all preceding and following code unchanged.
+\end{enumerate}
+
+Indentation is preserved by detecting the loop's own indentation level from
+the source and replicating it in the emitted loop.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{I/O Abstraction and WebAssembly Integration}
 \label{sec:wasm}
 
+\subsection{I/O Abstraction}
+
+The runtime communicates with the outside world exclusively through an abstract
+\texttt{io\_t} interface:
+
+\begin{lstlisting}[language=C, basicstyle=\ttfamily\small]
+typedef struct {
+    const char* (*read)(io_t*);   /* returns next token or NULL */
+    void (*write)(io_t*, const char*);
+    void (*destroy)(io_t*);
+} io_ops_t;
+
+struct io { io_ops_t ops; };
+\end{lstlisting}
+
+Two concrete implementations are provided:
+
+\begin{itemize}
+  \item \texttt{io\_stdio} --- delegates directly to \texttt{scanf} and
+        \texttt{printf}, used by the CLI.
+  \item \texttt{io\_buffered} --- maintains an input queue and an output
+        queue.  JavaScript pushes input tokens by calling
+        \texttt{pseudo\_push\_input()} (a WASM export) and pulls output by
+        calling \texttt{pseudo\_pull\_output()}.  When the input queue is empty,
+        \texttt{read()} returns \texttt{NULL}, causing the runtime to transition
+        to \texttt{EXEC\_NEEDS\_INPUT}.
+\end{itemize}
+
+\subsection{WebAssembly Bridge}
+
+The WASM build compiles the entire C library with Emscripten \cite{emscripten},
+targeting the WebAssembly instruction format \cite{haas2017wasm}.  The bridge
+module (\texttt{wasm/bridge.c}) instantiates a singleton \texttt{runtime\_t}
+and a singleton \texttt{io\_buffered}, then exposes the toolchain to
+JavaScript via \texttt{EMSCRIPTEN\_KEEPALIVE}-annotated functions, which are
+exported by name from the resulting \texttt{.wasm} module.  The exported
+surface includes functions for initialisation, source loading, single-step and
+run-to-completion execution, input supply, output retrieval, variable
+inspection, transpilation, and loop equivalence.
+
+Separating the I/O layer behind an interface means that the \emph{same}
+runtime and debugger C code is used in both the CLI and the browser --- only
+the I/O backend differs.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Web Editor}
 \label{sec:editor}
 
+The web editor is a single-page application built around the Monaco Editor
+\cite{monaco}, the same editing component that powers Visual Studio Code.
+For the \texttt{pseudocode} language, the editor registers:
+
+\begin{itemize}
+  \item A \textbf{Monarch tokeniser} \cite{monarch} that classifies tokens
+        into keyword, operator, string, number, comment, and identifier
+        categories for syntax highlighting.
+  \item A \textbf{language configuration} that specifies bracket pairs
+        (for auto-closing), the line-comment token, and auto-indentation
+        rules.
+\end{itemize}
+
+At runtime the JavaScript application loads the compiled WASM module and
+communicates with it through the exported C functions.  The interface
+provides:
+
+\begin{itemize}
+  \item \textbf{Run} --- compiles the editor content, sends it to the WASM
+        runtime, and streams output tokens to the output pane.
+  \item \textbf{Step / Step Over / Step Back} --- calls the corresponding
+        WASM step function, then queries the runtime for the current line,
+        variable table (JSON), and condition information to update the
+        highlighted line and the variable inspector panel.
+  \item \textbf{Transpile} --- calls the WASM transpiler with the selected
+        target language and displays the result in a read-only Monaco pane.
+  \item \textbf{Loop Equivalence} --- identifies the loop under the cursor
+        and passes it to the equivalence module.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{VSCode Extension}
 \label{sec:vscode}
+
+The Visual Studio Code extension provides the same capabilities as the web
+editor but integrated into the developer's local environment.  It bundles
+the native CLI binary (compiled for the target platform) and invokes it as a
+child process.  The extension contributes:
+
+\begin{itemize}
+  \item Syntax highlighting, through a TextMate grammar derived from the
+        Monarch tokeniser rules.
+  \item A \textbf{Run Pseudo++} command that executes the active file with
+        the bundled CLI and streams output to a dedicated terminal.
+  \item A \textbf{Transpile} command that runs the CLI's \texttt{transpile}
+        sub-command and opens the result in a new editor tab.
+\end{itemize}

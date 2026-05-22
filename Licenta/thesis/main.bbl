@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 
 \bibitem{treesitter-thesis}
 Max Brunsfeld.
@@ -17,6 +17,25 @@ Corrado Böhm and Giuseppe Jacopini.
   rules.
 \newblock {\em Communications of the {ACM}}, 9(5):366--371, 1966.
 
+\bibitem{raptor}
+Martin~C. Carlisle, Terry~A. Wilson, Jeffrey~W. Humphries, and Steven~M.
+  Hadfield.
+\newblock {RAPTOR}: Introducing programming to non-majors with flowcharts.
+\newblock In {\em Proceedings of the 36th {ACM} {SIGCSE} Technical Symposium on
+  Computer Science Education}, pages 52--56, 2005.
+
+\bibitem{dijkstra1968goto}
+Edsger~W. Dijkstra.
+\newblock Go to statement considered harmful.
+\newblock {\em Communications of the {ACM}}, 11(3):147--148, 1968.
+
+\bibitem{fnv-hash}
+Donald Eastlake, Tony Hansen, Glenn Fowler, Landon~Curt Noll, and Kiem-Phong
+  Vo.
+\newblock The {FNV} non-cryptographic hash algorithm.
+\newblock Internet-draft, Internet Engineering Task Force, 2019.
+\newblock \url{https://datatracker.ietf.org/doc/html/draft-eastlake-fnv}.
+
 \bibitem{reversible-debugging}
 Jakob Engblom.
 \newblock A review of reverse debugging.
@@ -28,6 +47,20 @@ Andreas Haas, Andreas Rossberg, Derek Schuff, Ben Titzer, Dan Gohman, Luke
   Wagner, Alon Zakai, JF~Bastien, and Michael Holman.
 \newblock {WebAssembly} specification.
 \newblock Technical report, World Wide Web Consortium ({W3C}), 2019.
+
+\bibitem{haas2017wasm}
+Andreas Haas, Andreas Rossberg, Derek~L. Schuff, Ben~L. Titzer, Michael Holman,
+  Dan Gohman, Luke Wagner, Alon Zakai, and JF~Bastien.
+\newblock Bringing the {Web} up to speed with {WebAssembly}.
+\newblock In {\em Proceedings of the 38th {ACM} {SIGPLAN} Conference on
+  Programming Language Design and Implementation ({PLDI})}, pages 185--200,
+  2017.
+
+\bibitem{lewis2003omniscient}
+Bil Lewis.
+\newblock Debugging backwards in time.
+\newblock In {\em Proceedings of the Fifth International Workshop on Automated
+  and Algorithmic Debugging ({AADEBUG})}, 2003.
 
 \bibitem{monaco}
 {Microsoft Corporation}.
@@ -45,6 +78,23 @@ Andreas Haas, Andreas Rossberg, Derek Schuff, Ben Titzer, Dan Gohman, Luke
   {IX--XII}.
 \newblock Technical report, Ministerul Educa\c{t}iei Na\c{t}ionale al
   Rom\^{a}niei, 2004.
+
+\bibitem{psint}
+Pablo Novara.
+\newblock {PSeInt}: A pseudocode interpreter for learning programming.
+\newblock \url{https://pseint.sourceforge.net/}, 2003.
+
+\bibitem{scratch}
+Mitchel Resnick, John Maloney, Andr{\'e}s Monroy-Hern{\'a}ndez, Niki Rusk,
+  Evelyn Eastmond, Karen Brennan, Amon Millner, Eric Rosenbaum, Jay Silver,
+  Brian Silverman, and Yasmin Kafai.
+\newblock Scratch: Programming for all.
+\newblock {\em Communications of the {ACM}}, 52(11):60--67, 2009.
+
+\bibitem{wing2006ct}
+Jeannette~M. Wing.
+\newblock Computational thinking.
+\newblock {\em Communications of the {ACM}}, 49(3):33--35, 2006.
 
 \bibitem{emscripten}
 Alon Zakai.

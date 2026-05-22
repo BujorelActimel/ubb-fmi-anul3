@@ -1,17 +1,202 @@
 \chapter{Introduction}
 \label{chap:introduction}
 
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Problem Statement}
 \label{sec:problem}
 
+The Romanian national baccalaureate examination in Computer Science requires
+candidates to read, write, and reason about programs expressed in a
+standardised pseudocode dialect \cite{romanian-curriculum}.  This dialect
+is defined by the Ministry of Education and uses Romanian keywords (\textit{citeşte}, \textit{scrie},
+\textit{dacă}, \textit{cât timp}, \textit{pentru}, \textit{repetă}),
+Unicode mathematical symbols for assignment and comparison
+($\leftarrow$, $\leq$, $\geq$, $\neq$), and a visual block structure built
+from box-drawing characters
+(\texttt{┌}, \texttt{│}, \texttt{└}, \texttt{■}).
+A representative fragment from the 2020 baccalaureate training set is
+shown below:
+
+\begin{center}
+\ttfamily\small
+\begin{tabular}{l}
+citeşte n \textit{(număr natural)}            \\
+p$\leftarrow$1; m$\leftarrow$0; k$\leftarrow$0 \\
+┌cât timp n$\neq$0 execută                     \\
+│\phantom{x}citește x                          \\
+│┌pentru i$\leftarrow$1,k execută              \\
+││\phantom{x}x$\leftarrow$[x/10]              \\
+│└■                                            \\
+│┌dacă x$\neq$0 atunci c$\leftarrow$x\%10     \\
+││altfel c$\leftarrow$n\%10                    \\
+│└■                                            \\
+│\phantom{x}m$\leftarrow$c*p+m                \\
+│\phantom{x}n$\leftarrow$[n/10]; p$\leftarrow$p*10; k$\leftarrow$k+1 \\
+└■                                             \\
+scrie m
+\end{tabular}
+\end{center}
+
+Despite being the language of instruction for secondary school CS in Romania,
+this dialect has no standard execution environment.  Students preparing for
+the exam must mentally simulate the execution of each program, tracing
+variable values by hand on paper.  This manual process is error-prone,
+time-consuming, and provides no feedback on whether a solution is correct.
+Teachers face the same limitation when preparing or grading exam problems.
+
+The dialect cannot be fed directly to any general-purpose language tool.
+Its Unicode symbols and Romanian keywords are not valid in C, C++, Pascal,
+or Python.  General pseudocode interpreters designed for English-language
+curricula do not recognise the Romanian syntax.  No existing tool supports
+the full feature set of the dialect: all four loop constructs
+(\texttt{cât timp}, \texttt{pentru}, \texttt{repetă\ldots până când},
+\texttt{execută\ldots cât timp}), the floor-division operator, the
+square-root symbol, and the visual block-delimiter notation.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Motivation}
 \label{sec:motivation}
 
+The absence of executable tooling creates a concrete gap between the way
+students \emph{learn} algorithms and the way they \emph{verify} them.
+A student who writes a sorting or search algorithm in the baccalaureate
+pseudocode has no way to check whether it produces the correct output for a
+given input without executing it manually — a process that is both slow and
+susceptible to arithmetic errors.
+
+Closing this gap motivates several specific capabilities, consistent with
+the broader goal of equipping students with tools that make algorithmic
+thinking \emph{executable} \cite{wing2006ct}:
+
+\begin{itemize}
+  \item \textbf{Execution.}  Running a pseudocode program and observing its
+        output is the most direct form of correctness feedback.  An interpreter
+        that accepts the canonical notation gives students an interactive
+        scratchpad for testing their solutions.
+
+  \item \textbf{Step-through debugging.}  Watching variable values change
+        statement by statement builds intuition about algorithm behaviour and
+        makes it easier to pinpoint logic errors.  A debugger tailored to the
+        pseudocode dialect removes the need for manual trace tables.
+
+  \item \textbf{Transpilation.}  The baccalaureate exam also tests knowledge
+        of C++ and Pascal.  A transpiler that converts pseudocode to these
+        languages lets students validate an algorithm in pseudocode and then
+        produce a compilable implementation, reinforcing the connection between
+        the two representations.
+
+  \item \textbf{Accessibility.}  A browser-based editor requires no
+        installation and works on any device, which is important in a school
+        context where students may not have administrator rights on lab
+        computers.
+\end{itemize}
+
+Beyond individual students, a standard toolchain benefits the broader
+community: teachers can construct exam problems with known correct outputs,
+and curriculum authors can publish executable examples alongside written
+explanations.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Related Work}
 \label{sec:related-brief}
 
+Several tools address adjacent problems.  General pseudocode environments
+such as \textit{PSeInt} \cite{psint} (a widely-used pseudocode interpreter
+for Spanish-speaking students) and \textit{RAPTOR} \cite{raptor}
+(a flowchart-based programming environment) support their respective
+notations but cannot parse Romanian keywords or Unicode symbols.
+Visual programming environments such as \textit{Scratch} \cite{scratch}
+target younger learners and are not suited to algorithmic notation at the
+secondary level.
+Browser-based coding platforms such as Replit and OnlineGDB accept standard
+languages (C++, Pascal, Python) but require the student to first translate
+the pseudocode manually.  To the best of our knowledge, no tool exists that
+directly executes the Romanian baccalaureate pseudocode dialect.
+A detailed comparison with existing tools is provided in
+Chapter~\ref{chap:related}.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Contributions}
 \label{sec:contributions}
 
+This thesis presents \textbf{Pseudo++}, a complete open-source toolchain for
+the Romanian baccalaureate pseudocode dialect.  The specific contributions
+are:
+
+\begin{enumerate}
+  \item \textbf{A formal grammar for the dialect.}
+        A Tree-sitter grammar (written in JavaScript) that precisely captures
+        the syntax of the Romanian baccalaureate pseudocode, including all
+        four loop constructs, operator precedence, and the visual
+        block-delimiter notation.
+
+  \item \textbf{A two-pass source normaliser (linter).}
+        A module that maps the canonical Unicode notation to an ASCII
+        representation accepted by the parser, and then re-indents the source
+        structurally, making the toolchain robust to the formatting
+        variations that appear in practice.
+
+  \item \textbf{A tree-walking interpreter.}
+        A C implementation that executes normalised pseudocode using an
+        explicit execution stack and a dispatch table of per-statement step
+        functions, supporting all language constructs including nested loops,
+        conditionals, and dynamic typing.
+
+  \item \textbf{A snapshot-based step debugger.}
+        An extension of the interpreter that captures the full runtime state
+        before each statement, enabling variable inspection and step-through
+        execution from a browser front end.
+
+  \item \textbf{A two-pass transpiler.}
+        A module that converts pseudocode to equivalent C, C++, or Pascal
+        source code, using a first pass for variable-type inference and a
+        second pass for code emission.
+
+  \item \textbf{A loop-equivalence transformation module.}
+        An analysis and rewrite module that converts any loop construct
+        (\texttt{pentru}, \texttt{cât timp}, \texttt{repetă},
+        \texttt{execută\ldots cât timp}) into any of the other three while
+        preserving semantics.
+
+  \item \textbf{A browser-based web editor.}
+        A single-page application embedding the Monaco editor with a custom
+        Monarch syntax-highlighting grammar, wired to the C library compiled
+        to WebAssembly via Emscripten, providing execution, debugging,
+        transpilation, and equivalence views without any server-side
+        component.
+
+  \item \textbf{A Visual Studio Code extension.}
+        A standalone extension that provides syntax highlighting for
+        \texttt{.pseudo} files via a TextMate grammar, with no dependency on
+        the C library.
+
+  \item \textbf{A native command-line interface.}
+        A CLI binary with subcommands for running, linting, parsing,
+        transpiling, and computing loop equivalences, suitable for scripting
+        and batch testing.
+\end{enumerate}
+
+All components share a single C core library that is compiled both to a
+native binary (for the CLI) and to a WebAssembly module (for the web
+editor), ensuring that the browser and terminal interfaces exercise
+identical logic.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Thesis Structure}
 \label{sec:structure}
+
+The remainder of this thesis is organised as follows.
+Chapter~\ref{chap:related} surveys related work, comparing Pseudo++ with
+existing pseudocode tools, educational programming environments, and
+language-implementation techniques.
+Chapter~\ref{chap:background} covers the theoretical background: the
+Tree-sitter parsing framework, the Monaco editor and its Monarch grammar
+formalism, the WebAssembly compilation target, and the distinction between
+concrete and abstract syntax trees.
+Chapter~\ref{chap:implementation} describes the design and implementation
+of each component of the Pseudo++ toolchain in detail.
+Chapter~\ref{chap:evaluation} presents an evaluation of the toolchain,
+including correctness testing against official baccalaureate problems,
+performance benchmarks, and a discussion of limitations.
+Chapter~\ref{chap:conclusions} summarises the contributions, reflects on
+design decisions, and outlines directions for future work.
