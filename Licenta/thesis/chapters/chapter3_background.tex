@@ -6,8 +6,8 @@ It covers the Monaco editor and its Monarch tokenisation model used for syntax
 highlighting, the mechanics of incremental parsing via Tree-sitter, the conceptual
 distinctions between interpretation and transpilation together with Pseudo++'s
 bifurcated pipeline, the structured-programming basis for loop equivalence
-transformations, the WebAssembly execution model, and the snapshot-based approach
-used by the reversible debugger.
+transformations, the WebAssembly execution model, and the step-through debugging
+model used by the Pseudo++ debugger.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Monaco Editor and Monarch Tokenisation}
@@ -136,8 +136,8 @@ Tree-sitter employs a built-in error-recovery strategy: when the parser encounte
 an unexpected token, it inserts \texttt{ERROR} and \texttt{MISSING} nodes into the
 tree rather than aborting.  The resulting tree is always complete (every byte of
 input appears in some node) and serves as a basis for incremental syntax-error
-diagnostics.  Pseudo++'s linter traverses the tree looking for these sentinel nodes
-and reports their location to the user.
+diagnostics.  Pseudo++'s parser module traverses the tree looking for these sentinel
+nodes and reports their location to the user.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Interpretation and Transpilation}
@@ -167,7 +167,7 @@ stack mirrors the nesting of syntactic constructs, converting what would otherwi
 recursive C calls into an iterative state machine.  Each stack frame carries a
 \textit{phase} counter that encodes progress through the frame's sub-steps, making
 the execution granularity uniform --- exactly one statement per step --- which is a
-prerequisite for the debugger's snapshot mechanism (Section~\ref{sec:snapshots}).
+prerequisite for the debugger's step-by-step inspection (Section~\ref{sec:debugger}).
 
 \subsection{Transpilation}
 
@@ -199,7 +199,7 @@ the user's intent.  Figure~\ref{fig:pipeline} shows the complete pipeline.
   lbl/.style     = {font=\footnotesize\itshape},
 ]
   \node[box] (src)   {Source};
-  \node[box, below=of src]  (lint)  {Linter};
+  \node[box, below=of src]  (lint)  {Formatter};
   \node[box, below=of lint] (parse) {Parser (Tree-sitter)};
 
   \node[box, below left =14mm and 22mm of parse] (interp) {Interpreter\\(tree-walk)};
@@ -350,11 +350,15 @@ A thin bridge layer (\texttt{wasm/bridge.c}) exposes the interpreter lifecycle
 and I/O routines:
 
 \begin{verbatim}
-EMSCRIPTEN_KEEPALIVE runtime_t* runtime_create_buffered(void);
-EMSCRIPTEN_KEEPALIVE exec_state_t runtime_step(runtime_t* rt);
-EMSCRIPTEN_KEEPALIVE const char* runtime_pop_output(runtime_t* rt);
-EMSCRIPTEN_KEEPALIVE void runtime_push_input(runtime_t* rt,
-                                              const char* line);
+EMSCRIPTEN_KEEPALIVE int   pseudo_init(void);
+EMSCRIPTEN_KEEPALIVE int   pseudo_load(const char* source);
+EMSCRIPTEN_KEEPALIVE int   pseudo_step(void);
+EMSCRIPTEN_KEEPALIVE int   pseudo_run(void);
+EMSCRIPTEN_KEEPALIVE void  pseudo_push_input(const char* value);
+EMSCRIPTEN_KEEPALIVE char* pseudo_pop_output(void);
+EMSCRIPTEN_KEEPALIVE char* pseudo_debug_step(void);
+EMSCRIPTEN_KEEPALIVE char* pseudo_transpile(const char* src,
+                                            const char* language);
 \end{verbatim}
 
 The I/O abstraction layer (\texttt{io\_buffered}) replaces the standard
@@ -366,7 +370,7 @@ loop is never stalled by a long-running computation.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Statement-Level Step-Through Debugging}
-\label{sec:snapshots}
+\label{sec:debugging}
 
 \subsection{Interactive Debugging in Educational Contexts}
 
@@ -375,13 +379,9 @@ statement at a time, inspecting variable values and control flow at each point.
 This is particularly valuable when learning programming: rather than reading static
 code, the student sees the program \textit{in motion} --- which variable changes,
 which branch is taken, how a loop counter evolves \cite{wing2006ct}.
-
-The ability to step \emph{backwards} through execution history --- so-called
-\textit{omniscient} or \textit{reversible} debugging \cite{lewis2003omniscient,reversible-debugging}
---- extends this further by letting the developer inspect state at any previous
-point without restarting the program.  Pseudo++'s snapshot architecture
-(Section~\ref{subsec:pipeline}) provides the foundation for this capability
-at the C runtime level.
+More advanced tools support stepping \emph{backwards} through execution history
+(omniscient or reversible debugging \cite{lewis2003omniscient,reversible-debugging});
+Pseudo++ provides forward-only stepping.
 
 Pseudo++'s debugger exposes two user-facing operations:
 
@@ -394,26 +394,15 @@ Pseudo++'s debugger exposes two user-facing operations:
         a runtime error, or needs user input.
 \end{itemize}
 
-\subsection{Per-Step State Capture}
+\subsection{Per-Step State Serialisation}
 
-At each Step Into, the runtime first serialises the complete program state into
-a \texttt{runtime\_snapshot\_t} structure before advancing execution.  A snapshot
-records:
-
-\begin{itemize}
-  \item the variable environment: name, value, and type for every variable currently
-        in scope;
-  \item the execution stack: frame type, phase counter, loop bounds, loop counter,
-        loop variable name, and the identity of the current CST node for each
-        active frame;
-  \item auxiliary I/O state: the multi-variable read index and a pending-input flag;
-  \item the current line number and execution-state enum.
-\end{itemize}
-
-The snapshot identifier is stored by the JavaScript \texttt{PseudoDebugger} class
-alongside the cached variable values and condition-evaluation metadata for that step.
-Variable values are cached on the JavaScript side so that the variable panel can be
-refreshed without an additional round-trip to the Wasm module.
+At each Step Into the WASM bridge calls \texttt{runtime\_step()} to advance the
+interpreter by one visible action, then immediately serialises the resulting runtime
+state.  The variable table is serialised by \texttt{runtime\_get\_variables\_json()},
+which iterates over the environment and emits a JSON array of
+\texttt{\{name, value, type\}} objects with proper string escaping.  The bridge
+combines this with the current line number, execution status, and optional condition
+information into a single JSON response returned to JavaScript for each step.
 
 \subsection{Condition Visualisation}
 

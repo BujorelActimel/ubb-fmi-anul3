@@ -7,8 +7,8 @@
 
 The Romanian national baccalaureate examination in Computer Science requires
 candidates to read, write, and reason about programs expressed in a
-standardised pseudocode dialect \cite{romanian-curriculum}.  This dialect
-is defined by the Ministry of Education and uses Romanian keywords (\textit{citeşte}, \textit{scrie},
+pseudocode dialect established by convention in Romanian high-school CS
+education \cite{romanian-curriculum}.  This dialect uses Romanian keywords (\textit{citeşte}, \textit{scrie},
 \textit{dacă}, \textit{cât timp}, \textit{pentru}, \textit{repetă}),
 Unicode mathematical symbols for assignment and comparison
 ($\leftarrow$, $\leq$, $\geq$, $\neq$), and a visual block structure built
@@ -37,12 +37,15 @@ scrie m
 \end{tabular}
 \end{center}
 
-Despite being the language of instruction for secondary school CS in Romania,
+Despite being one of the core notations taught in Romanian secondary school CS,
 this dialect has no standard execution environment.  Students preparing for
 the exam must mentally simulate the execution of each program, tracing
-variable values by hand on paper.  This manual process is error-prone,
-time-consuming, and provides no feedback on whether a solution is correct.
-Teachers face the same limitation when preparing or grading exam problems.
+variable values by hand on paper.  Manual tracing does develop valuable intuition about algorithm behaviour
+and remains the required format during the written examination itself.
+However, it is also error-prone for longer programs, provides no
+automated feedback on correctness, and gives no way to quickly test
+a solution against multiple inputs.
+Teachers face a symmetric limitation when constructing or verifying exam problems.
 
 The dialect cannot be fed directly to any general-purpose language tool.
 Its Unicode symbols and Romanian keywords are not valid in C, C++, Pascal,
@@ -50,8 +53,9 @@ or Python.  General pseudocode interpreters designed for English-language
 curricula do not recognise the Romanian syntax.  No existing tool supports
 the full feature set of the dialect: all four loop constructs
 (\texttt{cât timp}, \texttt{pentru}, \texttt{repetă\ldots până când},
-\texttt{execută\ldots cât timp}), the floor-division operator, the
-square-root symbol, and the visual block-delimiter notation.
+\texttt{execută\ldots cât timp}), the swap operator (\texttt{x $\leftrightarrow$ y}),
+the floor operator (\texttt{[expr]}), the square-root symbol ($\sqrt{\phantom{x}}$),
+the modulo operator, single-line comments, and the visual block-delimiter notation.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Motivation}
@@ -70,17 +74,18 @@ thinking \emph{executable} \cite{wing2006ct}:
 
 \begin{itemize}
   \item \textbf{Execution.}  Running a pseudocode program and observing its
-        output is the most direct form of correctness feedback.  An interpreter
-        that accepts the canonical notation gives students an interactive
-        scratchpad for testing their solutions.
+        output is the most direct form of correctness feedback.  A pseudocode
+        interpreter gives students an interactive scratchpad for testing their
+        solutions.
 
   \item \textbf{Step-through debugging.}  Watching variable values change
         statement by statement builds intuition about algorithm behaviour and
         makes it easier to pinpoint logic errors.  A debugger tailored to the
         pseudocode dialect removes the need for manual trace tables.
 
-  \item \textbf{Transpilation.}  The baccalaureate exam also tests knowledge
-        of C++ and Pascal.  A transpiler that converts pseudocode to these
+  \item \textbf{Transpilation.}  The baccalaureate exam requires students
+        to implement solutions in a real programming language --- C, C++,
+        or Pascal.  A transpiler that converts pseudocode to any of these
         languages lets students validate an algorithm in pseudocode and then
         produce a compilable implementation, reinforcing the connection between
         the two representations.
@@ -88,7 +93,9 @@ thinking \emph{executable} \cite{wing2006ct}:
   \item \textbf{Accessibility.}  A browser-based editor requires no
         installation and works on any device, which is important in a school
         context where students may not have administrator rights on lab
-        computers.
+        computers.  Because the entire toolchain runs as a WebAssembly module
+        inside the browser, no server is needed for execution: once the page
+        is loaded, the tool works fully offline.
 \end{itemize}
 
 Beyond individual students, a standard toolchain benefits the broader
@@ -110,8 +117,12 @@ target younger learners and are not suited to algorithmic notation at the
 secondary level.
 Browser-based coding platforms such as Replit and OnlineGDB accept standard
 languages (C++, Pascal, Python) but require the student to first translate
-the pseudocode manually.  To the best of our knowledge, no tool exists that
-directly executes the Romanian baccalaureate pseudocode dialect.
+the pseudocode manually.  While pseudocod.ro provides basic execution of a Romanian pseudocode
+dialect, its accepted syntax diverges noticeably from the baccalaureate
+standard, requiring students to adapt their code before it can run.
+No existing tool combines execution of the standard dialect with
+step-through debugging, transpilation to C/C++/Pascal, static analysis,
+and loop-equivalence transformations in a single browser-based environment.
 A detailed comparison with existing tools is provided in
 Chapter~\ref{chap:related}.
 
@@ -125,27 +136,21 @@ are:
 
 \begin{enumerate}
   \item \textbf{A formal grammar for the dialect.}
-        A Tree-sitter grammar (written in JavaScript) that precisely captures
-        the syntax of the Romanian baccalaureate pseudocode, including all
-        four loop constructs, operator precedence, and the visual
-        block-delimiter notation.
+        A Tree-sitter grammar that precisely captures the full syntax of the
+        Romanian baccalaureate pseudocode dialect.
 
-  \item \textbf{A two-pass source normaliser (linter).}
+  \item \textbf{A two-pass source formatter.}
         A module that maps the canonical Unicode notation to an ASCII
-        representation accepted by the parser, and then re-indents the source
-        structurally, making the toolchain robust to the formatting
-        variations that appear in practice.
+        representation accepted by the parser, and then re-indents the
+        source structurally.
 
   \item \textbf{A tree-walking interpreter.}
-        A C implementation that executes normalised pseudocode using an
-        explicit execution stack and a dispatch table of per-statement step
-        functions, supporting all language constructs including nested loops,
-        conditionals, and dynamic typing.
+        A C implementation that executes pseudocode, supporting all language
+        constructs and dynamic typing.
 
-  \item \textbf{A snapshot-based step debugger.}
-        An extension of the interpreter that captures the full runtime state
-        before each statement, enabling variable inspection and step-through
-        execution from a browser front end.
+  \item \textbf{A step debugger.}
+        An extension of the interpreter that supports step-by-step execution
+        with live variable inspection and condition visualisation.
 
   \item \textbf{A two-pass transpiler.}
         A module that converts pseudocode to equivalent C, C++, or Pascal
@@ -165,15 +170,10 @@ are:
         transpilation, and equivalence views without any server-side
         component.
 
-  \item \textbf{A Visual Studio Code extension.}
-        A standalone extension that provides syntax highlighting for
-        \texttt{.pseudo} files via a TextMate grammar, with no dependency on
-        the C library.
-
   \item \textbf{A native command-line interface.}
-        A CLI binary with subcommands for running, linting, parsing,
-        transpiling, and computing loop equivalences, suitable for scripting
-        and batch testing.
+        A CLI binary with subcommands for running, formatting, checking,
+        parsing, transpiling, and computing loop equivalences, suitable for
+        scripting and batch testing.
 \end{enumerate}
 
 All components share a single C core library that is compiled both to a

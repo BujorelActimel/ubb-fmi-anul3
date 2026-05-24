@@ -51,7 +51,34 @@
 \hrule
 \vspace{0.5cm}
 
-% Abstract in English: a brief summary of each chapter, emphasizing original contributions.
+The Romanian national baccalaureate examination in Computer Science requires
+candidates to read, write, and reason about programs expressed in a pseudocode
+dialect that uses Romanian keywords, Unicode mathematical symbols, and a
+box-drawing block structure.  Despite being central to the curriculum, this
+dialect has no standard execution environment: students must trace programs
+by hand, with no automated way to verify correctness.
+
+This thesis presents \textbf{Pseudo++}, an open-source toolchain that fills
+this gap.  The toolchain is built around a single C library compiled to both
+a native binary and a WebAssembly module, ensuring identical behaviour in the
+command-line interface and the browser-based web editor.  It comprises eight
+components: a Tree-sitter grammar that formally captures the full dialect
+syntax; a two-pass source formatter that normalises Unicode and ASCII
+notation into a canonical form; a tree-walking interpreter with an explicit
+execution stack; a step-through debugger with live variable and condition
+inspection; a two-pass transpiler that generates C, C++, or Pascal from
+pseudocode; a loop-equivalence transformation module that mechanically
+converts between the four loop forms; a browser-based editor built on Monaco
+and Emscripten that runs entirely offline; and a command-line interface for
+scripting and batch use.
+
+The web editor requires no installation and has no server-side component,
+making it accessible in school lab environments.  The loop-equivalence module
+directly supports an examination topic --- the inter-convertibility of loop
+constructs --- for which no automated tool previously existed.  Pseudo++ is
+the only tool that combines execution, debugging, transpilation, and static
+analysis for the Romanian baccalaureate pseudocode dialect in a single
+browser-based environment.
 
 
 \tableofcontents

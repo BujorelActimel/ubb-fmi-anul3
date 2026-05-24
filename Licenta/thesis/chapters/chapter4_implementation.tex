@@ -40,27 +40,28 @@ compile-time dependency graph of all modules grouped by layer.
 %% ── C Core Library ──────────────────────────────────────────────────────
 \begin{pgfonlayer}{background}
   \fill[teal!7, rounded corners=10pt]
-    (-1.0,-0.65) rectangle (13.8, 5.5);
+    (-1.0,-0.65) rectangle (15.2, 5.5);
   \draw[teal!35, line width=1pt, rounded corners=10pt]
-    (-1.0,-0.65) rectangle (13.8, 5.5);
+    (-1.0,-0.65) rectangle (15.2, 5.5);
 \end{pgfonlayer}
 \node[font=\small\bfseries\color{teal!55!black}, anchor=north west]
   at (-0.8, 5.45) {C Core Library};
 
 %% Capabilities row (y = 3.9)  — teal tint marks the top layer
-\node[cmod, fill=teal!5] (rt) at (2.0,  3.9) {runtime + debugger};
-\node[cmod, fill=teal!5] (tr) at (6.5,  3.9) {transpiler};
-\node[cmod, fill=teal!5] (eq) at (11.0, 3.9) {equivalence};
+\node[cmod, fill=teal!5] (rt) at (1.5,  3.9) {runtime + debugger};
+\node[cmod, fill=teal!5] (tr) at (5.2,  3.9) {transpiler};
+\node[cmod, fill=teal!5] (chk) at (8.9, 3.9) {check};
+\node[cmod, fill=teal!5] (eq) at (12.6, 3.9) {equivalence};
 
 %% Foundation row (y = 2.3)
-\node[cmod] (parse) at (2.0,  2.3) {parser (Tree-sitter)};
-\node[cmod] (lint)  at (6.5,  2.3) {linter};
-\node[cmod] (io)    at (11.0, 2.3) {I/O abstraction};
+\node[cmod] (parse) at (1.5,  2.3) {parser (Tree-sitter)};
+\node[cmod] (lint)  at (7.0,  2.3) {formatter};
+\node[cmod] (io)    at (12.6, 2.3) {I/O abstraction};
 
 %% Utilities row (y = 0.7)
-\node[cmod] (env)  at (2.0,  0.7) {environment};
-\node[cmod] (str)  at (6.5,  0.7) {string};
-\node[cmod] (hmap) at (11.0, 0.7) {hashmap};
+\node[cmod] (env)  at (1.5,  0.7) {environment};
+\node[cmod] (str)  at (7.0,  0.7) {string};
+\node[cmod] (hmap) at (12.6, 0.7) {hashmap};
 
 %% ── WebAssembly build ────────────────────────────────────────────────
 \node[build, fill=violet!8, draw=violet!45,
@@ -78,10 +79,10 @@ compile-time dependency graph of all modules grouped by layer.
 
 \node[product, fill=orange!9, draw=orange!50,
       minimum width=4.4cm, minimum height=1.55cm]
-  (cli) at (10.5, 9.4)
+  (cli) at (12.0, 9.4)
   {{\bfseries CLI}\\[4pt]
-   {\footnotesize run $\cdot$ lint $\cdot$ parse}\\[1pt]
-   {\footnotesize transpile $\cdot$ equivalence}};
+   {\footnotesize run $\cdot$ format $\cdot$ check $\cdot$ parse}\\[1pt]
+   {\footnotesize debug $\cdot$ transpile $\cdot$ equivalence}};
 
 %% ── Arrows ───────────────────────────────────────────────────────────
 \draw[arr, blue!55]
@@ -93,7 +94,7 @@ compile-time dependency graph of all modules grouped by layer.
   {native C API} (2.9, 5.5);
 
 \draw[arr, orange!70!black]
-  (cli.south) -- (10.5, 5.5);
+  (cli.south) -- (12.0, 5.5);
 
 \end{tikzpicture}%
 }
@@ -103,9 +104,13 @@ compile-time dependency graph of all modules grouped by layer.
 The modules and their responsibilities are:
 
 \begin{description}
-  \item[\texttt{linter}] Normalises the raw source text before parsing: it
+  \item[\texttt{formatter}] Normalises the raw source text before parsing: it
         replaces Unicode mathematical symbols (e.g.\ $\leq$, $\neq$) with
         their ASCII equivalents and re-indents the code structurally.
+
+  \item[\texttt{check}] Performs static semantic analysis on the CST after
+        parsing, reporting diagnostics (errors and warnings with codes such as
+        \texttt{W001}) for issues like unused variables or suspicious patterns.
 
   \item[\texttt{parser}] Wraps the Tree-sitter incremental parser with the
         custom \texttt{pseudo} grammar, exposes the resulting concrete syntax
@@ -117,9 +122,8 @@ The modules and their responsibilities are:
         arithmetic), \texttt{environment} (variable store), and
         \texttt{interpreter} (execution engine with explicit stack).
 
-  \item[\texttt{debugger}] Extends the interpreter with snapshot-based
-        reversible execution, variable inspection, and JSON serialisation of
-        runtime state for the browser front end.
+  \item[\texttt{debugger}] Extends the interpreter with variable inspection
+        and JSON serialisation of runtime state for the browser front end.
 
   \item[\texttt{transpiler}] Converts the CST to equivalent C, C++, or Pascal
         source, performing a two-pass analysis: first collecting variable types,
@@ -139,8 +143,8 @@ The modules and their responsibilities are:
         C functions callable from JavaScript.
 
   \item[\texttt{cli}] The command-line entry point, supporting \texttt{run},
-        \texttt{transpile}, \texttt{debug}, \texttt{parse-tree}, and
-        \texttt{equivalence} sub-commands.
+        \texttt{format}, \texttt{check}, \texttt{parse}, \texttt{debug},
+        \texttt{transpile}, and \texttt{equivalence} sub-commands.
 \end{description}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -149,8 +153,8 @@ The modules and their responsibilities are:
 
 The grammar for the Pseudo++ language is specified as a Tree-sitter
 \cite{treesitter} grammar in JavaScript (\texttt{grammar.js}).  It defines
-the complete syntax of the Romanian high-school pseudocode dialect, following
-the conventions used in the Romanian baccalaureate exam \cite{romanian-curriculum}.
+the notation established by convention in Romanian high-school CS textbooks
+and baccalaureate examination papers \cite{romanian-curriculum}.
 
 \subsection{Statement Forms}
 
@@ -212,10 +216,11 @@ symbol ($\sqrt{\phantom{x}}$).
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Source Normalisation}
-\label{sec:linter}
+\label{sec:formatter}
 
-The official Romanian high-school pseudocode notation \cite{romanian-curriculum},
-as it appears in textbooks and on baccalaureate exam papers, uses a rich set
+The Romanian high-school pseudocode notation, established by convention
+through textbooks and baccalaureate examination papers \cite{romanian-curriculum},
+uses a rich set
 of Unicode characters: relational symbols ($\leq$, $\neq$, $\geq$), assignment and
 swap arrows ($\leftarrow$, $\leftrightarrow$), box-drawing characters for
 structural indentation (box-drawing bar), a filled square ($\blacksquare$) as the
@@ -234,12 +239,12 @@ form via ligatures and glyph substitutions.  This rendering is purely visual
 and optional: a toggle button in the editor enables or disables it, leaving
 the underlying source file unchanged in either case.
 
-The linter is the bridge between the two representations.  It accepts source in
+The formatter is the bridge between the two representations.  It accepts source in
 either form --- canonical Unicode or ASCII --- and produces the normalised ASCII
 form consumed by the parser.  The normalisation pipeline consists of two passes:
 
 \paragraph{Pass 1 --- Symbol Substitution.}
-The linter maintains a static hash map that maps Unicode byte sequences to their
+The formatter maintains a static hash map that maps Unicode byte sequences to their
 ASCII equivalents (Table~\ref{tab:substitutions}).  The pass iterates through
 the source byte-by-byte, scanning the substitution map at each position for the
 longest matching key (a greedy, maximum-munch strategy).  When a match is found
@@ -262,7 +267,7 @@ box-drawing bar (U+2502)       & Structural indent    & 4 spaces \\
 \textit{ă}, \textit{â}, \textit{î}, \textit{ș}, \textit{ț} & Romanian diacritics & \texttt{a}, \texttt{a}, \texttt{i}, \texttt{s}, \texttt{t} \\
 \hline
 \end{tabular}
-\caption{Selected substitution rules applied by the linter in Pass 1.
+\caption{Selected substitution rules applied by the formatter in Pass 1.
   The canonical Unicode notation is the standard form used in Romanian
   high-school textbooks and exam papers; the ASCII output is the form
   accepted by the Tree-sitter grammar.}
@@ -492,51 +497,30 @@ to continue.
 \label{sec:debugger}
 
 The debugger extends the interpreter with step-by-step execution and runtime
-state inspection, following the snapshot-based approach to reversible debugging
-described by Lewis \cite{lewis2003omniscient} and surveyed by Engblom
-\cite{reversible-debugging}.  The web editor exposes three operations:
-\textbf{Step Into} (advance one visible action), \textbf{Continue} (run to
-completion or the next input request), and \textbf{Stop}.  After each step,
-the front end displays the currently executing line, the full variable table,
-which variables changed since the last step, and --- when the step involved
-evaluating a condition --- the condition text and its boolean result.
+state inspection.  The web editor exposes two operations:
+\textbf{Step Into} (advance one visible action) and \textbf{Continue} (run to
+completion or the next input request).  After each step, the front end displays
+the currently executing line, the full variable table, and --- when the step
+involved evaluating a condition --- the condition text and its boolean result.
 
-This is made possible by a \emph{snapshot-based} architecture in the C runtime
-that captures the complete interpreter state before every step.
-
-\paragraph{Snapshot structure.}
-A \texttt{runtime\_snapshot\_t} captures the complete interpreter state at a
-given execution point:
-
-\begin{itemize}
-  \item All variable bindings (name, value, and type) as a
-        \texttt{var\_info\_t} array.
-  \item The full execution stack: for each frame, its type, phase,
-        \texttt{child\_idx}, loop counters, and the \emph{start byte} of the
-        corresponding CST node.
-  \item The auxiliary fields \texttt{read\_var\_index},
-        \texttt{has\_pending\_read}, \texttt{current\_line}, and
-        \texttt{exec\_state}.
-\end{itemize}
-
-CST nodes are identified by their \texttt{start\_byte} offset (a
-\texttt{uint32\_t}) rather than by pointer.  On restoration,
-\texttt{find\_node\_by\_start()} locates the matching node in the unchanged
-CST.  Because the CST is never modified after parsing, this identity scheme is
-safe and avoids serialising the full tree.
-
-\paragraph{Circular buffer.}
-Snapshots are stored in a fixed-size circular buffer of \texttt{MAX\_SNAPSHOTS}
-entries, giving the JavaScript layer a history of past states it can replay
-without re-executing the program from the beginning.  When the buffer is full,
-the oldest snapshot is evicted.
-
-\paragraph{JSON serialisation.}
+\paragraph{State serialisation.}
 The function \texttt{runtime\_get\_variables\_json()} serialises the current
 variable table to a JSON array of \texttt{\{name, value, type\}} objects, with
 proper JSON string escaping.  This JSON string is the primary mechanism by
 which the WebAssembly runtime communicates variable state to the JavaScript
 front end on each step.
+
+The WASM bridge combines the variable table, the current line number, the
+execution status, and optional condition information into a single JSON
+response per step via \texttt{pseudo\_debug\_step()}.
+
+\paragraph{Condition visualisation.}
+When the statement about to execute is a conditional or loop guard, the runtime
+additionally captures the condition expression text and its boolean result in a
+\texttt{condition\_info\_t} struct stored on the runtime object.  The bridge
+layer serialises this alongside the variable state, letting the student see not
+only \textit{which} branch was taken but \textit{why} --- the exact condition
+text and its evaluated truth value at that step.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Transpiler}
@@ -634,7 +618,7 @@ loop to transform, and the desired output construct (\texttt{FOR},
 \texttt{WHILE}, \texttt{DO\_WHILE}, or \texttt{REPEAT}).  It then:
 
 \begin{enumerate}
-  \item Runs the source through the linter and parser to obtain a CST.
+  \item Runs the source through the formatter and parser to obtain a CST.
   \item Locates the loop node at the specified line via DFS.
   \item Extracts the loop header fields (\texttt{var}, \texttt{start},
         \texttt{end}, \texttt{step}, \texttt{condition}) and body text from
@@ -720,30 +704,14 @@ provides:
 \begin{itemize}
   \item \textbf{Run} --- compiles the editor content, sends it to the WASM
         runtime, and streams output tokens to the output pane.
-  \item \textbf{Step / Step Over / Step Back} --- calls the corresponding
-        WASM step function, then queries the runtime for the current line,
-        variable table (JSON), and condition information to update the
-        highlighted line and the variable inspector panel.
+  \item \textbf{Step / Step Over} --- calls the corresponding WASM step
+        function (\texttt{pseudo\_debug\_step} or \texttt{pseudo\_step\_over}),
+        which returns a JSON object containing the current line, variable table,
+        execution status, and condition information; the front end uses this to
+        update the highlighted line and the variable inspector panel.
   \item \textbf{Transpile} --- calls the WASM transpiler with the selected
         target language and displays the result in a read-only Monaco pane.
   \item \textbf{Loop Equivalence} --- identifies the loop under the cursor
         and passes it to the equivalence module.
 \end{itemize}
 
-% ─────────────────────────────────────────────────────────────────────────────
-\section{VSCode Extension}
-\label{sec:vscode}
-
-The Visual Studio Code extension provides the same capabilities as the web
-editor but integrated into the developer's local environment.  It bundles
-the native CLI binary (compiled for the target platform) and invokes it as a
-child process.  The extension contributes:
-
-\begin{itemize}
-  \item Syntax highlighting, through a TextMate grammar derived from the
-        Monarch tokeniser rules.
-  \item A \textbf{Run Pseudo++} command that executes the active file with
-        the bundled CLI and streams output to a dedicated terminal.
-  \item A \textbf{Transpile} command that runs the CLI's \texttt{transpile}
-        sub-command and opens the result in a new editor tab.
-\end{itemize}

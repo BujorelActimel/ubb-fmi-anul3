@@ -1,17 +1,217 @@
 \chapter{Related Work}
 \label{chap:related}
 
-\section{General-Purpose Online Code Editors}
+This chapter surveys tools and research that overlap with one or more
+aspects of the Pseudo++ toolchain: general-purpose online execution
+platforms, pseudocode-specific interpreters, visual programming
+environments, and the use of transpilation in educational settings.
+Each category is assessed along the dimensions relevant to the Romanian
+baccalaureate use case, and Section~\ref{sec:comparison} closes with a
+direct feature comparison.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Online Code Execution Platforms}
 \label{sec:online-editors}
 
+The most commonly used tools in Romanian high-school computer science
+classes are browser-based compilers for the two target exam languages,
+C++ and Pascal.  Platforms such as Replit \cite{replit} and OnlineGDB
+\cite{onlinegdb} provide a full edit-compile-run loop in the browser
+without any local installation, which is practical in lab settings where
+students lack administrator rights.  Both support C++ and Pascal, and
+OnlineGDB offers a graphical step-through debugger for C++.
+
+The fundamental limitation shared by all such platforms is that the
+input must be a real programming language.  A student who formulates a
+solution in the baccalaureate pseudocode dialect must first translate it
+manually into C++ or Pascal before it can be compiled.  This translation
+step is an additional cognitive burden, and the compiled program does not
+directly confirm the correctness of the pseudocode --- only of its
+translation.  Neither platform provides any assistance with the
+translation itself.
+
+Python Tutor \cite{pythontutor}, developed by Guo at MIT, occupies a
+complementary position.  It is a step-through visualiser for Python,
+Java, C, and C++ that renders the heap, stack frames, and variable
+bindings at each execution step.  Its variable-inspection panel --- a
+live display of name, value, and type updated after every statement ---
+is conceptually close to the variable inspector in Pseudo++'s web
+editor.  Python Tutor's contribution is the visualisation model rather
+than language coverage; like Replit it requires the student to work in a
+general-purpose language, not in a pseudocode dialect.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Pseudocode-Specific Tools}
 \label{sec:pseudocode-tools}
 
-\section{Educational Language Interpreters}
+\textbf{PSeInt} \cite{psint} is the closest existing tool to Pseudo++.
+Developed by Pablo Novara for the Spanish-speaking educational community,
+it is a desktop application that interprets a pseudocode dialect with
+Spanish keywords (\textit{Escribir}, \textit{Leer}, \textit{Si},
+\textit{Mientras}) and provides a step-through debugger and a flowchart
+view.  PSeInt has accumulated a large user base across Latin America and
+has been actively developed for over two decades.
+
+The structural differences from Pseudo++ are significant.  Being a
+desktop application, PSeInt requires installation and is not accessible
+from a browser.  It supports only its own Spanish-keyword dialect: it
+does not recognise Unicode mathematical symbols, box-drawing characters,
+or any of the Romanian baccalaureate keywords.  Critically, PSeInt has
+no transpiler: there is no mechanism to convert a program to C++, Pascal,
+or any other compilable language.
+
+\textbf{RAPTOR} \cite{raptor} takes a fundamentally different approach to
+pseudocode: its primary representation is a \emph{flowchart}, not text.
+Students assemble programs from graphical boxes (assignment, decision,
+loop, procedure call) connected by arrows.  The tool can display a
+textual pseudocode rendering of the current flowchart, but this text is
+a read-only projection of the graphical model, not an independently
+editable source.  RAPTOR includes a visual debugger that highlights the
+executing node in the flowchart.  It is widely used in introductory
+programming courses at American universities \cite{raptor}, but its
+visual-first design diverges substantially from the text-based pseudocode
+taught in Romanian high schools, which students must also write and reason
+about on paper during examinations.
+
+\textbf{Flowgorithm} \cite{flowgorithm}, developed by Carlisle (also the
+lead author of the RAPTOR paper), is a more recent flowchart tool with
+a broader output capability.  Unlike RAPTOR it can export the constructed
+flowchart to over a dozen programming languages, including C, C++, Java,
+and Python.  This export feature is the closest existing analogue to
+Pseudo++'s transpiler; the semantics-preserving translation from a
+structured notation to compilable code serves the same pedagogical
+purpose.  However, Flowgorithm's input is a graphical flowchart, not a
+text-based pseudocode, so it cannot process the notation that appears on
+Romanian exam papers.
+
+\textbf{Pseudocod.ro} \cite{pseudocodro} is the only existing browser-based
+tool that targets the Romanian pseudocode dialect directly.  It accepts
+text input and executes it without requiring a local installation, which
+places it closest to Pseudo++ among all surveyed tools.  However, its
+accepted syntax diverges from the baccalaureate standard in several
+respects, meaning that programs written in the notation used on exam
+papers typically require manual adaptation before they run correctly.
+The tool provides basic execution only: it has no step-through debugger,
+no transpiler, no static analysis, and no loop-equivalence feature.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Visual and Block-Based Programming Environments}
 \label{sec:educational-interpreters}
 
+Block-based environments represent a distinct strand of educational
+tooling, aimed primarily at learners who benefit from the scaffolding
+that syntactically valid-by-construction programs provide.
+
+\textbf{Scratch} \cite{scratch}, developed at the MIT Media Lab, is the
+most widely deployed representative of this category.  Programs are
+constructed by snapping coloured blocks together; there is no text to
+type or syntax error to make.  Scratch targets an 8--16 age range and
+its abstraction level --- event-driven sprites reacting to messages ---
+is misaligned with the baccalaureate curriculum, which requires reasoning
+about arithmetic, nested loops, and sorting algorithms expressed as
+algebraic operations on variables.
+
+\textbf{Blockly} \cite{blockly}, Google's open-source block editor
+library, is lower-level than Scratch and can generate Python or
+JavaScript source from its block graphs.  The block-to-code export path
+is structurally analogous to transpilation: a high-level representation
+is compiled to a lower-level, executable form.  Some educational
+platforms use Blockly as a bridge to a real language, letting students
+first construct a program visually and then inspect the generated
+Python.  The key difference relative to Pseudo++ is the input
+representation: Blockly's source is a visual block graph, not the
+linear, text-based pseudocode notation that Romanian students write on
+paper.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Transpilation in Educational Contexts}
 \label{sec:transpilation-education}
 
+Transpilation from an educational notation to a standard programming
+language has been explored primarily in the block-based domain.  Tools
+such as Blockly and Snap! generate Python or JavaScript from block
+programs; MIT App Inventor similarly produces Java-compatible bytecode
+from a block graph.  In all of these cases the input is visual and
+structured-by-construction, so type inference and syntactic normalisation
+are either trivial or unnecessary.
+
+The text-based pseudocode domain is less explored.  Ben-Ari
+\cite{benari2001} identifies the conceptual gap between pseudocode and
+executable code as a persistent difficulty for learners and advocates for
+tools that make the connection explicit and mechanical, but the emphasis
+in the literature has been on pedagogy rather than on building such
+tools.  Flowgorithm's export capability (Section~\ref{sec:pseudocode-tools})
+is the only directly comparable implementation, but it starts from a
+graphical flowchart rather than from text.
+
+Pseudo++'s transpiler addresses this gap for the specific case of the
+Romanian baccalaureate dialect.  The two-pass design --- a type-collection
+pass followed by a code-emission pass --- handles the mismatch between
+the dynamically typed pseudocode and the statically typed target languages
+(C, C++, Pascal) without requiring explicit type annotations from the
+student.  The loop-equivalence module additionally provides an interactive
+implementation of a transformation that the curriculum requires students
+to perform on paper, and for which no automated counterpart exists in any
+of the surveyed tools.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Comparison with the Present Work}
 \label{sec:comparison}
+
+Table~\ref{tab:comparison} summarises the capabilities of the surveyed
+tools across six dimensions.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{l c c c c c c}
+\hline
+\textbf{Tool} &
+\textbf{Executes} &
+\textbf{Debugger} &
+\textbf{Transpiles} &
+\textbf{Linter} &
+\begin{tabular}{@{}c@{}}\textbf{Browser-}\\\textbf{based}\end{tabular} &
+\begin{tabular}{@{}c@{}}\textbf{Open}\\\textbf{source}\end{tabular} \\
+\hline
+Pseudocod.ro      & \checkmark & $\times$   & $\times$   & $\times$   & \checkmark & $\times$   \\
+PSeInt            & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   & \checkmark \\
+RAPTOR            & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   & $\times$   \\
+Flowgorithm       & \checkmark & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   \\
+Replit            & \checkmark & partial    & $\times$   & $\times$   & \checkmark & $\times$   \\
+Python Tutor      & \checkmark & \checkmark & $\times$   & $\times$   & \checkmark & \checkmark \\
+Scratch           & \checkmark & $\times$   & $\times$   & $\times$   & \checkmark & \checkmark \\
+Blockly           & $\times$   & $\times$   & \checkmark & $\times$   & \checkmark & \checkmark \\
+\textbf{Pseudo++} & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+\hline
+\end{tabular}
+\caption{Feature comparison of educational programming tools.
+  \textit{Linter}: static analysis pass that reports semantic warnings
+  and errors independently of execution.
+  \textit{Transpiles}: ability to produce compilable source in a
+  standard language from the tool's primary input representation.
+  \textit{Partial} for Replit's debugger reflects that step-through
+  debugging is available for C++ but not for Pascal.}
+\label{tab:comparison}
+\end{table}
+
+The table highlights a gap that none of the surveyed tools fills: the
+combination of execution, step-through debugging, transpilation, and
+static analysis in a single browser-based, open-source tool.  Flowgorithm
+comes closest --- execution, debugger, and transpiler --- but it operates
+on graphical flowcharts rather than text pseudocode and ships only as a
+desktop application.  No other text-based tool combines all four
+processing modes.
+
+Several qualitative differences complement the binary comparison.
+PSeInt and RAPTOR require local installation, a practical barrier in
+school lab environments.  Python Tutor's visualisation model is the
+closest precedent for Pseudo++'s variable-inspection panel, but it
+cannot process any form of pseudocode.  Replit and OnlineGDB expose
+the student to the full syntactic constraints of C++ or Pascal before
+any algorithm can be tested.  None of the surveyed tools implement
+loop-equivalence transformations as an interactive feature, despite
+that being an explicit examination topic in the Romanian curriculum.
+No existing tool natively executes the Romanian baccalaureate
+pseudocode dialect: this remains the primary motivation for Pseudo++.

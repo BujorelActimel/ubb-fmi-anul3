@@ -1,11 +1,104 @@
 \chapter{Conclusions}
 \label{chap:conclusions}
 
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Summary}
 \label{sec:summary}
 
+This thesis presented Pseudo++, an open-source toolchain for the Romanian
+baccalaureate pseudocode dialect.  The motivating gap was clear: despite
+pseudocode being a central part of the Romanian high-school CS curriculum,
+no complete execution environment existed for it.  Students had to
+mentally trace programs by hand, with no automated way to verify whether
+a solution was correct.
+
+The toolchain addresses this gap through eight components built around a
+single C core library: a Tree-sitter grammar that formally captures the
+dialect's syntax, a source formatter that normalises Unicode notation to
+an ASCII form the parser can process, a tree-walking interpreter, a
+step-through debugger with live variable and condition inspection, a
+two-pass transpiler targeting C, C++, and Pascal, a loop-equivalence
+transformation module, a browser-based web editor that requires no
+installation and runs entirely offline via WebAssembly, and a
+command-line interface for scripting and batch use.
+
+A deliberate architectural decision runs through all components: the
+same C library is compiled both to a native binary and to a WebAssembly
+module, so the CLI and the web editor exercise identical logic.  There is
+no server involved in execution --- the entire toolchain runs in the
+browser once the page is loaded.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Limitations}
 \label{sec:limitations}
 
+Several limitations are worth acknowledging.
+
+\paragraph{Scalar variables only.}
+The language processed by Pseudo++ covers the subset of the baccalaureate
+pseudocode that uses scalar variables (integers, reals, strings).  Arrays
+and records are not part of this dialect as taught at the secondary level,
+so they are outside the scope of the toolchain.  Programs that require
+indexed data structures cannot be expressed or executed.
+
+\paragraph{Forward-only debugging.}
+The debugger supports stepping forward through execution one statement at
+a time but does not support stepping backwards.  Inspecting earlier
+program states requires restarting execution from the beginning.
+
+\paragraph{Heuristic re-indentation.}
+The formatter's structural re-indentation pass is keyword-driven: it
+increases or decreases indentation based on the presence of specific
+tokens at line boundaries.  Pathological source formatting --- deeply
+mixed Unicode and ASCII notation, or unusual whitespace structure ---
+can cause the pass to produce incorrect indentation, leading to parse
+errors for programs that would otherwise be syntactically valid.
+
+\paragraph{Limited static analysis.}
+The \texttt{check} module reports a basic set of semantic warnings.
+It does not perform data-flow analysis, dead-code detection, or
+type-mismatch warnings across branches, all of which would be useful
+for an educational linter.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Future Work}
 \label{sec:future}
+
+\paragraph{A dialect-agnostic architecture via a common IR.}
+The current toolchain is tightly coupled to the baccalaureate dialect:
+the interpreter and transpiler operate directly on the Tree-sitter CST,
+so supporting a new dialect would require duplicating significant backend
+logic.  A more scalable direction is to introduce a dialect-agnostic
+intermediate representation (IR) as a common target.  Each dialect would
+need only a grammar and a front-end pass that lowers its CST to the IR;
+the interpreter, transpiler, debugger, and static analyser would then
+operate entirely at the IR level and be reusable across all dialects.
+This architecture would make it straightforward to add support for other
+Romanian pseudocode variants --- such as the dialect used in the
+Babeș-Bolyai University admission examination, which extends the
+baccalaureate notation with arrays, subprograms, and additional
+built-in operations --- without touching any backend code.
+
+\paragraph{Richer static analysis.}
+Expanding the \texttt{check} module with data-flow analysis would enable
+diagnostics such as use-before-assignment, unreachable code after
+unconditional branches, and type inconsistencies across conditional
+paths.  These are common sources of logic errors in student code and
+are straightforwardly detectable on a CST with a simple fixed-point
+analysis.
+
+\paragraph{Step-back debugging.}
+Implementing a snapshot-based mechanism that captures interpreter state
+before each step would enable backward navigation through execution
+history.  Given the explicit-stack architecture of the interpreter,
+snapshots reduce to copying the stack, environment, and a small set of
+auxiliary fields --- a feasible extension that would bring the debugging
+experience closer to omniscient debuggers studied in the literature
+\cite{lewis2003omniscient,reversible-debugging}.
+
+\paragraph{Integration with educational platforms.}
+Pseudo++'s WebAssembly module could be integrated into existing Romanian
+educational platforms such as pbinfo.ro, either as an inline widget for
+running pseudocode examples or as a fully supported submission language,
+allowing students to solve problems directly in pseudocode without first
+translating to C++ or Pascal.

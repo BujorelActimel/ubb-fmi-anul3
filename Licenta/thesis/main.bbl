@@ -1,5 +1,11 @@
 \begin{thebibliography}{10}
 
+\bibitem{benari2001}
+Mordechai Ben-Ari.
+\newblock Constructivism in computer science education.
+\newblock {\em Journal of Computers in Mathematics and Science Teaching},
+  20(1):45--73, 2001.
+
 \bibitem{treesitter-thesis}
 Max Brunsfeld.
 \newblock An incremental parsing system for programming tools.
@@ -16,6 +22,11 @@ Corrado Böhm and Giuseppe Jacopini.
 \newblock Flow diagrams, turing machines and languages with only two formation
   rules.
 \newblock {\em Communications of the {ACM}}, 9(5):366--371, 1966.
+
+\bibitem{flowgorithm}
+Martin~C. Carlisle.
+\newblock Flowgorithm: Graphical authoring tool using flowcharts.
+\newblock \url{http://www.flowgorithm.org/}, 2011.
 
 \bibitem{raptor}
 Martin~C. Carlisle, Terry~A. Wilson, Jeffrey~W. Humphries, and Steven~M.
@@ -41,6 +52,19 @@ Jakob Engblom.
 \newblock A review of reverse debugging.
 \newblock In {\em Proceedings of the 2012 System, Software, {SoC} and Silicon
   Debug Conference (S4D)}, pages 1--6, 2012.
+
+\bibitem{blockly}
+Neil Fraser.
+\newblock Ten things we've learned from {Blockly}.
+\newblock In {\em Proceedings of the 2015 {IEEE} Blocks and Beyond Workshop},
+  pages 49--50, 2015.
+
+\bibitem{pythontutor}
+Philip~J. Guo.
+\newblock Online {Python} tutor: Embeddable web-based program visualization for
+  {CS} education.
+\newblock In {\em Proceedings of the 44th {ACM} Technical Symposium on Computer
+  Science Education ({SIGCSE})}, pages 579--584, 2013.
 
 \bibitem{wasm-spec}
 Andreas Haas, Andreas Rossberg, Derek Schuff, Ben Titzer, Dan Gohman, Luke
@@ -83,6 +107,21 @@ Bil Lewis.
 Pablo Novara.
 \newblock {PSeInt}: A pseudocode interpreter for learning programming.
 \newblock \url{https://pseint.sourceforge.net/}, 2003.
+
+\bibitem{onlinegdb}
+{OnlineGDB}.
+\newblock {OnlineGDB}: Online compiler and debugger.
+\newblock \url{https://www.onlinegdb.com/}, 2015.
+
+\bibitem{pseudocodro}
+{pseudocod.ro}.
+\newblock Pseudocod.ro: Online romanian pseudocode interpreter.
+\newblock \url{https://www.pseudocod.ro/}, 2020.
+
+\bibitem{replit}
+{Replit, Inc.}
+\newblock Replit: The collaborative browser-based {IDE}.
+\newblock \url{https://replit.com/}, 2016.
 
 \bibitem{scratch}
 Mitchel Resnick, John Maloney, Andr{\'e}s Monroy-Hern{\'a}ndez, Niki Rusk,
