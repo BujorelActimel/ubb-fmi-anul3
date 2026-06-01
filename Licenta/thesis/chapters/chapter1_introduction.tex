@@ -8,7 +8,7 @@
 The Romanian national baccalaureate examination in Computer Science requires
 candidates to read, write, and reason about programs expressed in a
 pseudocode dialect established by convention in Romanian high-school CS
-education \cite{romanian-curriculum}.  This dialect uses Romanian keywords (\textit{citeşte}, \textit{scrie},
+education.  This dialect uses Romanian keywords (\textit{citeşte}, \textit{scrie},
 \textit{dacă}, \textit{cât timp}, \textit{pentru}, \textit{repetă}),
 Unicode mathematical symbols for assignment and comparison
 ($\leftarrow$, $\leq$, $\geq$, $\neq$), and a visual block structure built
@@ -45,7 +45,9 @@ and remains the required format during the written examination itself.
 However, it is also error-prone for longer programs, provides no
 automated feedback on correctness, and gives no way to quickly test
 a solution against multiple inputs.
-Teachers face a symmetric limitation when constructing or verifying exam problems.
+Teachers face the same limitation when constructing or verifying exam problems.
+Pseudo++ does not replace manual tracing --- it complements it, letting
+students explore further than paper allows.
 
 The dialect cannot be fed directly to any general-purpose language tool.
 Its Unicode symbols and Romanian keywords are not valid in C, C++, Pascal,
@@ -85,10 +87,23 @@ thinking \emph{executable} \cite{wing2006ct}:
 
   \item \textbf{Transpilation.}  The baccalaureate exam requires students
         to implement solutions in a real programming language --- C, C++,
-        or Pascal.  A transpiler that converts pseudocode to any of these
-        languages lets students validate an algorithm in pseudocode and then
-        produce a compilable implementation, reinforcing the connection between
-        the two representations.
+        or Pascal --- and includes a dedicated task where students are given
+        a pseudocode snippet and must transcribe it into real code.  A
+        transpiler that converts pseudocode to any of these languages lets
+        students validate an algorithm in pseudocode and then produce a
+        compilable implementation, reinforcing the connection between the
+        two representations.
+
+  \item \textbf{Loop-equivalence.}  The baccalaureate curriculum explicitly
+        requires students to understand that the four loop constructs are
+        interconvertible.  A tool that mechanically performs these conversions
+        lets students verify their understanding and explore the semantic
+        equivalence hands-on, rather than reasoning about it abstractly.
+
+  \item \textbf{Static analysis.}  A linter that flags common mistakes ---
+        uninitialised variables, type mismatches, unreachable code --- gives
+        students immediate feedback without having to run the program, and
+        helps teachers catch errors in exam problems before publishing them.
 
   \item \textbf{Accessibility.}  A browser-based editor requires no
         installation and works on any device, which is important in a school
@@ -144,6 +159,11 @@ are:
         representation accepted by the parser, and then re-indents the
         source structurally.
 
+  \item \textbf{A static analyser.}
+        A linter that checks a parsed program for semantic errors ---
+        uninitialised variables, type mismatches, and unreachable code ---
+        and reports them with source locations.
+
   \item \textbf{A tree-walking interpreter.}
         A C implementation that executes pseudocode, supporting all language
         constructs and dynamic typing.
@@ -163,7 +183,7 @@ are:
         \texttt{execută\ldots cât timp}) into any of the other three while
         preserving semantics.
 
-  \item \textbf{A browser-based web editor.}
+  \item \textbf{A browser-based editor.}
         A single-page application embedding the Monaco editor with a custom
         Monarch syntax-highlighting grammar, wired to the C library compiled
         to WebAssembly via Emscripten, providing execution, debugging,
@@ -173,7 +193,7 @@ are:
   \item \textbf{A native command-line interface.}
         A CLI binary with subcommands for running, formatting, checking,
         parsing, transpiling, and computing loop equivalences, suitable for
-        scripting and batch testing.
+        scripting.
 \end{enumerate}
 
 All components share a single C core library that is compiled both to a
@@ -190,9 +210,11 @@ Chapter~\ref{chap:related} surveys related work, comparing Pseudo++ with
 existing pseudocode tools, educational programming environments, and
 language-implementation techniques.
 Chapter~\ref{chap:background} covers the theoretical background: the
-Tree-sitter parsing framework, the Monaco editor and its Monarch grammar
-formalism, the WebAssembly compilation target, and the distinction between
-concrete and abstract syntax trees.
+Monaco editor and its Monarch tokenisation model, incremental parsing via
+Tree-sitter, semantic analysis and static checking, dynamic versus static
+typing and its implications for transpilation, the structured-programming
+basis for loop-equivalence transformations, and the WebAssembly execution
+model.
 Chapter~\ref{chap:implementation} describes the design and implementation
 of each component of the Pseudo++ toolchain in detail.
 Chapter~\ref{chap:evaluation} presents an evaluation of the toolchain,

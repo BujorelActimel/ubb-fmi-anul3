@@ -18,7 +18,7 @@ dialect's syntax, a source formatter that normalises Unicode notation to
 an ASCII form the parser can process, a tree-walking interpreter, a
 step-through debugger with live variable and condition inspection, a
 two-pass transpiler targeting C, C++, and Pascal, a loop-equivalence
-transformation module, a browser-based web editor that requires no
+transformation module, a browser-based editor that requires no
 installation and runs entirely offline via WebAssembly, and a
 command-line interface for scripting and batch use.
 
@@ -35,10 +35,8 @@ browser once the page is loaded.
 Several limitations are worth acknowledging.
 
 \paragraph{Scalar variables only.}
-The language processed by Pseudo++ covers the subset of the baccalaureate
-pseudocode that uses scalar variables (integers, reals, strings).  Arrays
-and records are not part of this dialect as taught at the secondary level,
-so they are outside the scope of the toolchain.  Programs that require
+The current implementation supports only scalar variables (integers, reals,
+strings).  Array and record types are not implemented; programs that require
 indexed data structures cannot be expressed or executed.
 
 \paragraph{Forward-only debugging.}
@@ -77,7 +75,9 @@ This architecture would make it straightforward to add support for other
 Romanian pseudocode variants --- such as the dialect used in the
 Babeș-Bolyai University admission examination, which extends the
 baccalaureate notation with arrays, subprograms, and additional
-built-in operations --- without touching any backend code.
+built-in operations --- without touching any backend code.  Introducing
+this IR would, however, require a substantial refactoring of the existing
+interpreter, transpiler, and static-analysis code.
 
 \paragraph{Richer static analysis.}
 Expanding the \texttt{check} module with data-flow analysis would enable

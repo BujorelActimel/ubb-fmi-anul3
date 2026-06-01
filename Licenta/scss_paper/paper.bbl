@@ -21,13 +21,8 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
-\bibitem{romanian-curriculum}
-{Ministerul Educa\c{t}iei Na\c{t}ionale}, ``Programa \c{s}colar\u{a} pentru
-  disciplina informatic\u{a}, clasele {IX--XII},'' Ministerul Educa\c{t}iei
-  Na\c{t}ionale al Rom\^{a}niei, Tech. Rep., 2004.
-
 \bibitem{pseudocodro}
-{pseudocod.ro}, ``Pseudocod.ro: Online {Romanian} pseudocode interpreter,''
+{pseudocod.ro}, ``Pseudocod.ro: Online romanian pseudocode interpreter,''
   \url{https://www.pseudocod.ro/}, 2020.
 
 \bibitem{psint}
@@ -69,9 +64,12 @@ A.~Zakai, ``Emscripten: An {LLVM}-to-{JavaScript} compiler,'' in
   pp. 301--312.
 
 \bibitem{treesitter}
+\BIBentryALTinterwordspacing
 M.~Brunsfeld \emph{et~al.}, ``Tree-sitter: An incremental parsing system for
   programming tools,'' in \emph{Proceedings of the {USENIX} Workshop on Hot
-  Topics in Operating Systems ({HotOS})}, 2018.
+  Topics in Operating Systems (HotOS)}, 2018. [Online]. Available:
+  \url{https://tree-sitter.github.io}
+\BIBentrySTDinterwordspacing
 
 \bibitem{treesitter-thesis}
 M.~Brunsfeld, ``An incremental parsing system for programming tools,'' Master's
@@ -79,11 +77,12 @@ M.~Brunsfeld, ``An incremental parsing system for programming tools,'' Master's
 
 \bibitem{fnv-hash}
 D.~Eastlake, T.~Hansen, G.~Fowler, L.~C. Noll, and K.-P. Vo, ``The {FNV}
-  non-cryptographic hash algorithm,'' Internet-draft, {IETF},
-  \url{https://datatracker.ietf.org/doc/html/draft-eastlake-fnv}, 2019.
+  non-cryptographic hash algorithm,'' Internet Engineering Task Force,
+  Internet-Draft, 2019,
+  \url{https://datatracker.ietf.org/doc/html/draft-eastlake-fnv}.
 
 \bibitem{bohm-jacopini}
-C.~B\"{o}hm and G.~Jacopini, ``Flow diagrams, {Turing} machines and languages
+C.~B\"{o}hm and G.~Jacopini, ``Flow diagrams, turing machines and languages
   with only two formation rules,'' \emph{Communications of the {ACM}}, vol.~9,
   no.~5, pp. 366--371, 1966.
 
@@ -100,8 +99,10 @@ E.~W. Dijkstra, ``Go to statement considered harmful,'' \emph{Communications of
   \url{https://microsoft.github.io/monaco-editor/monarch.html}, 2016.
 
 \bibitem{lewis2003omniscient}
+\BIBentryALTinterwordspacing
 B.~Lewis, ``Debugging backwards in time,'' in \emph{Proceedings of the Fifth
   International Workshop on Automated and Algorithmic Debugging ({AADEBUG})},
-  2003.
+  2003. [Online]. Available: \url{https://arxiv.org/abs/cs/0310016}
+\BIBentrySTDinterwordspacing
 
 \end{thebibliography}

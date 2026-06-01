@@ -3,7 +3,7 @@
 
 This chapter evaluates the correctness and performance of the Pseudo++
 toolchain.  The evaluation is structured into three tiers: unit tests for
-the linter module, integration tests that execute official Romanian
+the formatter module, integration tests that execute official Romanian
 baccalaureate problems end-to-end, and semantic-preservation tests for the
 loop equivalence module.  Transpiler correctness is assessed by compiling the
 generated C code with GCC and comparing its output against the known-correct
@@ -26,7 +26,7 @@ The test suite is divided into two directories:
           \item \texttt{int-test/bac/\textit{year}/antrenament\textit{N}/}
                 --- one directory per baccalaureate training problem, each
                 containing the canonical source (\texttt{src.pseudo}), the
-                linter-normalised source (\texttt{cleaned-src.pseudo}),
+                formatter-normalised source (\texttt{cleaned-src.pseudo}),
                 an input file (\texttt{input.txt}), and the
                 expected output (\texttt{expected-output.txt}).
           \item \texttt{int-test/equivalence/\textit{A\_to\_B}/} --- one
@@ -46,7 +46,7 @@ compared byte-for-byte against the expected file.
 \section{Unit Testing}
 \label{sec:unit-tests}
 
-The linter module is covered by 39 unit tests in \texttt{test/test\_linter.c}.
+The formatter module is covered by 39 unit tests in \texttt{test/test\_linter.c}.
 Each test constructs a short input string, calls \texttt{linter\_run()}, and
 asserts the normalised output against a known-correct string using a simple
 \texttt{ASSERT\_STR\_EQ} macro.  The cases cover:
@@ -182,13 +182,9 @@ Execution time was measured by running each of the 32 baccalaureate problems
 (2020--2021) 100 times in sequence and computing the mean wall-clock time per
 run on an AMD Ryzen 5 3600 machine running Arch Linux with a release build
 (\texttt{-O3}).  The average execution time per problem was \textbf{2.4\,ms},
-with a total time of \textbf{108\,ms} for all 32 problems combined.
-
+with a total time of \textbf{76.8\,ms} for all 32 problems combined.
 The dominant cost in each run is process start-up and the Tree-sitter parse,
-not the interpreter loop itself.  For the web editor the start-up cost is
-paid once when the WASM module is loaded; subsequent invocations reuse the
-already-loaded runtime, making the in-browser execution latency significantly
-lower than the CLI benchmark suggests.
+not the interpreter loop itself.
 
 At 2.4\,ms per program the interpreter is fast enough for interactive use:
 a student pressing the \textbf{Run} button receives output well within the

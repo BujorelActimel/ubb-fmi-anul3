@@ -2,12 +2,11 @@
 \label{chap:background}
 
 This chapter presents the theoretical foundations underpinning the Pseudo++ toolchain.
-It covers the Monaco editor and its Monarch tokenisation model used for syntax
-highlighting, the mechanics of incremental parsing via Tree-sitter, the conceptual
-distinctions between interpretation and transpilation together with Pseudo++'s
-bifurcated pipeline, the structured-programming basis for loop equivalence
-transformations, the WebAssembly execution model, and the step-through debugging
-model used by the Pseudo++ debugger.
+It covers the Monaco editor and its Monarch tokenisation model, the mechanics of
+incremental parsing via Tree-sitter, semantic analysis and static checking, the
+distinction between dynamic and static typing and its implications for transpilation,
+the structured-programming basis for loop-equivalence transformations, the WebAssembly
+execution model, and the step-through debugging model.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Monaco Editor and Monarch Tokenisation}
@@ -140,6 +139,46 @@ diagnostics.  Pseudo++'s parser module traverses the tree looking for these sent
 nodes and reports their location to the user.
 
 % ─────────────────────────────────────────────────────────────────────────────
+\section{Semantic Analysis and Static Checking}
+\label{sec:semantic-analysis}
+
+\subsection{Beyond Syntax}
+
+Syntactic analysis determines whether a program is grammatically well-formed;
+semantic analysis determines whether it is \textit{meaningful}.  A program can
+be syntactically valid yet semantically erroneous --- for example, using a
+variable before it is assigned, or passing a string where a number is expected.
+
+Semantic analysis operates on the parse tree produced by the parser and
+enforces constraints that cannot be expressed in a context-free grammar.  It
+is typically organised into two phases:
+
+\begin{itemize}
+  \item \textbf{Scope analysis} --- resolves identifiers to their declarations
+        and detects uses of undeclared or uninitialised variables.  This
+        requires maintaining a \textit{symbol table}: a mapping from identifier
+        names to their declaration context and inferred type.
+
+  \item \textbf{Type checking} --- verifies that operations are applied to
+        operands of compatible types (e.g.\ that arithmetic operators receive
+        numeric operands) and that assignments are type-consistent.
+\end{itemize}
+
+\subsection{Linting}
+
+A \textit{linter} is a tool that performs static semantic analysis without
+executing the program, reporting potential errors as diagnostics.  The term
+originates with the Unix \texttt{lint} utility for C, which flagged type
+mismatches and undefined behaviour that the compiler accepted silently.
+
+Modern linters are oriented towards \textit{warnings} rather than hard errors:
+they flag patterns that are likely mistakes --- an uninitialised variable, a
+condition that is always true, unreachable code --- without rejecting the
+program outright.  This is well suited to an educational context, where partial
+or exploratory programs are common and immediate, non-fatal feedback is more
+useful than a hard compile failure.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Interpretation and Transpilation}
 \label{sec:interpretation-transpilation}
 
@@ -183,6 +222,22 @@ target-language code for each node.  A pre-pass (\texttt{transpiler\_collect}) s
 all assignment targets to produce the forward variable declarations required by C
 and Pascal, since both languages mandate that all variables are declared before use.
 
+\subsection{Dynamic and Static Typing}
+
+Programming languages differ in \textit{when} type information is checked.
+\textit{Statically typed} languages (C, C++, Pascal) require all variables to
+be declared with an explicit type before use; the compiler verifies type
+correctness at compile time and rejects ill-typed programs.
+\textit{Dynamically typed} languages attach type information to values at
+runtime; a variable may hold an integer in one iteration and a string in the
+next.
+
+The Romanian baccalaureate pseudocode is dynamically typed by convention:
+variables are not declared, and their types are inferred from the values
+assigned to them.  Transpiling to C or Pascal therefore requires a
+\textit{type inference} pre-pass that analyses all assignment targets and
+deduces a static type for each variable before code emission begins.
+
 \subsection{The Pseudo++ Processing Pipeline}
 \label{subsec:pipeline}
 
@@ -191,6 +246,7 @@ the user's intent.  Figure~\ref{fig:pipeline} shows the complete pipeline.
 
 \begin{figure}[h]
 \centering
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
   node distance  = 7mm and 22mm,
   box/.style     = {draw, rounded corners=3pt, minimum width=34mm,
@@ -198,26 +254,37 @@ the user's intent.  Figure~\ref{fig:pipeline} shows the complete pipeline.
   arr/.style     = {-{Stealth[length=4pt]}, thick},
   lbl/.style     = {font=\footnotesize\itshape},
 ]
-  \node[box] (src)   {Source};
-  \node[box, below=of src]  (lint)  {Formatter};
-  \node[box, below=of lint] (parse) {Parser (Tree-sitter)};
+  \node[box] (src)   {Canonical Source};
+  \node[box, below=of src]   (fmt)   {Formatter};
+  \node[box, below=of fmt]   (ascii) {Normalised Source (ASCII)};
+  \node[box, below=of ascii] (parse) {Parser (Tree-sitter)};
 
-  \node[box, below left =14mm and 22mm of parse] (interp) {Interpreter\\(tree-walk)};
-  \node[box, below right=14mm and 22mm of parse] (trans)  {Transpiler\\(code gen)};
+  \node[box, below left =14mm and 72mm of parse] (interp) {Interpreter};
+  \node[box, below left =14mm and 24mm of parse] (linter) {Check};
+  \node[box, below right=14mm and 24mm of parse] (debug)  {Debugger};
+  \node[box, below right=14mm and 72mm of parse] (trans)  {Transpiler};
 
   \node[box, below=of interp] (out1) {Program Output};
-  \node[box, below=of trans]  (out2) {C / C++ / Pascal};
+  \node[box, below=of linter] (out2) {Diagnostics};
+  \node[box, below=of debug]  (out3) {Step State};
+  \node[box, below=of trans]  (out4) {C / C++ / Pascal};
 
-  \draw[arr] (src)   -- (lint);
-  \draw[arr] (lint)  -- (parse);
-  \draw[arr] (parse) -- node[lbl, above left ]{run}       (interp);
-  \draw[arr] (parse) -- node[lbl, above right]{transpile} (trans);
+  \draw[arr] (src)   -- (fmt);
+  \draw[arr] (fmt)   -- (ascii);
+  \draw[arr] (ascii) -- (parse);
+  \draw[arr] (parse) -- node[lbl, above left  ]{run}       (interp);
+  \draw[arr] (parse) -- node[lbl, left        ]{check}     (linter);
+  \draw[arr] (parse) -- node[lbl, right       ]{debug}     (debug);
+  \draw[arr] (parse) -- node[lbl, above right ]{transpile} (trans);
   \draw[arr] (interp) -- (out1);
-  \draw[arr] (trans)  -- (out2);
-\end{tikzpicture}
+  \draw[arr] (linter) -- (out2);
+  \draw[arr] (debug)  -- (out3);
+  \draw[arr] (trans)  -- (out4);
+\end{tikzpicture}%
+}
 \caption{The Pseudo++ processing pipeline.  After normalisation and parsing, the
-CST is handed to either the interpreter or the transpiler depending on the requested
-operation.}
+CST is handed to the interpreter, static analyser, debugger, or transpiler depending on the
+requested operation.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -239,8 +306,8 @@ languages --- \textit{for}, \textit{while}, \textit{do-while}, and
 cost of at most a guard condition or an unrolled first iteration.
 
 This is not merely an academic curiosity.  The Romanian high-school computer science
-curriculum \cite{romanian-curriculum} explicitly teaches all four loop forms and
-expects students to identify and apply these transformations in examination problems.
+curriculum explicitly teaches all four loop forms and expects students to
+identify and apply these transformations in examination problems.
 Providing an automated, interactive converter therefore has direct pedagogical value.
 
 \subsection{Semantics of the Four Loop Forms}
@@ -343,30 +410,6 @@ Functions to be exported must be annotated with \texttt{EMSCRIPTEN\_KEEPALIVE}
 to prevent dead-code elimination, or listed via the
 \texttt{-sEXPORTED\_FUNCTIONS} linker flag.
 
-\subsection{Application in Pseudo++}
-
-The Pseudo++ interpreter is written in C23 and compiled to Wasm via Emscripten.
-A thin bridge layer (\texttt{wasm/bridge.c}) exposes the interpreter lifecycle
-and I/O routines:
-
-\begin{verbatim}
-EMSCRIPTEN_KEEPALIVE int   pseudo_init(void);
-EMSCRIPTEN_KEEPALIVE int   pseudo_load(const char* source);
-EMSCRIPTEN_KEEPALIVE int   pseudo_step(void);
-EMSCRIPTEN_KEEPALIVE int   pseudo_run(void);
-EMSCRIPTEN_KEEPALIVE void  pseudo_push_input(const char* value);
-EMSCRIPTEN_KEEPALIVE char* pseudo_pop_output(void);
-EMSCRIPTEN_KEEPALIVE char* pseudo_debug_step(void);
-EMSCRIPTEN_KEEPALIVE char* pseudo_transpile(const char* src,
-                                            const char* language);
-\end{verbatim}
-
-The I/O abstraction layer (\texttt{io\_buffered}) replaces the standard
-\texttt{stdio} calls with a queue-based mechanism: output is pushed into a string
-queue that JavaScript drains via \texttt{runtime\_pop\_output}, and input is
-delivered by JavaScript calling \texttt{runtime\_push\_input} before the
-interpreter requests it.  This non-blocking design ensures the browser's event
-loop is never stalled by a long-running computation.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Statement-Level Step-Through Debugging}
@@ -394,20 +437,3 @@ Pseudo++'s debugger exposes two user-facing operations:
         a runtime error, or needs user input.
 \end{itemize}
 
-\subsection{Per-Step State Serialisation}
-
-At each Step Into the WASM bridge calls \texttt{runtime\_step()} to advance the
-interpreter by one visible action, then immediately serialises the resulting runtime
-state.  The variable table is serialised by \texttt{runtime\_get\_variables\_json()},
-which iterates over the environment and emits a JSON array of
-\texttt{\{name, value, type\}} objects with proper string escaping.  The bridge
-combines this with the current line number, execution status, and optional condition
-information into a single JSON response returned to JavaScript for each step.
-
-\subsection{Condition Visualisation}
-
-When the statement about to execute is a conditional or loop guard, the runtime
-additionally serialises the condition expression text and its boolean result into a
-small JSON object.  The front-end displays this beneath the variable panel, letting
-the student see not only \textit{which} branch was taken but \textit{why} ---
-the exact condition text and its evaluated truth value at that step.

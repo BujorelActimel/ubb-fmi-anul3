@@ -98,6 +98,9 @@ compile-time dependency graph of all modules grouped by layer.
 
 \end{tikzpicture}%
 }
+\caption{Compile-time dependency graph of the Pseudo++ modules, grouped by layer.
+  The C core library (teal) is compiled to both a native CLI binary and a WebAssembly
+  module loaded by the web editor.}
 \label{fig:modules}
 \end{figure}
 
@@ -477,7 +480,7 @@ include executing a simple statement, evaluating a loop condition, and
 terminating the program; invisible actions are internal transitions such as
 resetting \texttt{child\_idx} at the start of a new loop iteration.
 
-The public API exposes three execution modes:
+The public API exposes two execution modes:
 
 \begin{itemize}
   \item \texttt{runtime\_step()} --- advances to the next visible action.

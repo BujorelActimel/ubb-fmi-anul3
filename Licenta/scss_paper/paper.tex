@@ -13,11 +13,18 @@
 \usepackage{url}
 \usepackage{cite}
 \usepackage{microtype}
+\usepackage{pmboxdraw}
+\usepackage[hidelinks]{hyperref}
+\def\lstBoxV{\textSFxi}   % │ U+2502
+\def\lstBoxTL{\textSFi}   % ┌ U+250C
+\def\lstBoxBL{\textSFii}  % └ U+2514
+\def\kw#1{{\bfseries #1}}
 
-% Vertical spacing between top/bottom floats and body text
-\setlength{\textfloatsep}{10pt plus 4pt minus 2pt}
-\setlength{\floatsep}{8pt plus 2pt minus 2pt}
-\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+
+% Vertical spacing between floats and body text
+\setlength{\textfloatsep}{24pt plus 4pt minus 4pt}
+\setlength{\floatsep}{16pt plus 4pt minus 2pt}
+\setlength{\intextsep}{20pt plus 4pt minus 4pt}
 
 \lstdefinelanguage{pseudo}{
   morekeywords={citeste,scrie,daca,atunci,altfel,sf,cat,timp,executa,
@@ -31,20 +38,20 @@
   basicstyle=\ttfamily\footnotesize,
   breaklines=true,
   frame=single,
+  framesep=6pt,
   columns=flexible,
   keywordstyle=\bfseries,
   commentstyle=\itshape\color{gray},
   stringstyle=\color{black},
-  framesep=3pt,
-  xleftmargin=4pt,
-  xrightmargin=4pt,
-  aboveskip=6pt,
-  belowskip=4pt,
+  captionpos=b,
+  escapeinside={(*}{*)},
+  aboveskip=8pt,
+  belowskip=6pt,
 }
 
 \begin{document}
 
-\title{Pseudo++: A Browser-Based Toolchain for\\Romanian Baccalaureate Pseudocode}
+\title{Pseudo++: An Open-Source Toolchain for Romanian Baccalaureate Pseudocode}
 
 \author{
   \IEEEauthorblockN{Bujor Mihai Alexandru}
@@ -76,22 +83,23 @@ correctness.
 This paper presents \textbf{Pseudo++}, an open-source toolchain that fills
 this gap.  The toolchain is built around a single C library compiled to both a
 native binary and a WebAssembly module, ensuring identical behaviour in the
-command-line interface and the browser-based web editor.  It comprises eight
+command-line interface and the browser-based web editor.  It comprises nine
 components: a Tree-sitter grammar formally capturing the dialect's syntax; a
 two-pass formatter normalising Unicode and ASCII notation; a tree-walking
 interpreter with an explicit execution stack; a step-through debugger with
 live variable and condition inspection; a two-pass transpiler generating C,
 C++, or Pascal; a loop-equivalence module converting between all four loop
-constructs; a browser-based editor built on Monaco and Emscripten that runs
-entirely offline; and a CLI for scripting and batch use.
+constructs; a static analyzer reporting twelve diagnostic categories without
+executing the program; a browser-based editor built on Monaco, running entirely offline; and a CLI
+for scripting.
 
 The toolchain is evaluated on 53 official Romanian baccalaureate problems
 spanning six examination years (2020--2025), achieving a 100\,\% pass rate.
 The transpiler produces compilable, warning-free C for all 32 verified
 problems, and all 9 directed loop-equivalence conversions preserve observable
 output exactly.  Pseudo++ is the only tool that combines execution, debugging,
-transpilation, and static analysis for this dialect in a single browser-based
-environment.
+transpilation, loop-equivalence transformation, and static analysis for this
+dialect in a single browser-based, installation-free environment.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -106,11 +114,11 @@ transpiler, Romanian baccalaureate, Tree-sitter
 The Romanian national baccalaureate examination in Computer Science requires
 candidates to read, write, and reason about programs in a pseudocode dialect
 established by convention through high-school CS textbooks and examination
-papers~\cite{romanian-curriculum}.  The dialect uses Romanian keywords
+papers.  The dialect uses Romanian keywords
 (\textit{cite\c{s}te}, \textit{scrie}, \textit{dac\u{a}}, \textit{c\^{a}t
 timp}, \textit{pentru}, \textit{repet\u{a}}), Unicode mathematical symbols
 for assignment and comparison ($\leftarrow$, $\leq$, $\geq$, $\neq$), and
-box-drawing characters (\texttt{┌}, \texttt{│}, \texttt{└}, \texttt{■}) for
+box-drawing characters (\texttt{│}, $\blacksquare$) for
 visual block structure.
 
 Despite being one of the core notations in Romanian secondary CS education,
@@ -127,7 +135,7 @@ This paper presents \textbf{Pseudo++}, a complete open-source toolchain that
 addresses this gap.  Section~\ref{sec:dialect} describes the pseudocode dialect
 and its parsing challenges.  Section~\ref{sec:related} surveys related work.
 Section~\ref{sec:design} presents the system architecture.
-Section~\ref{sec:components} details the eight core components.
+Section~\ref{sec:components} details the nine core components.
 Section~\ref{sec:evaluation} reports the evaluation results.
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -139,25 +147,25 @@ Section~\ref{sec:evaluation} reports the evaluation results.
 The dialect combines Romanian keywords, Unicode mathematical symbols, and a
 visual indentation system based on box-drawing characters.  Listing~\ref{lst:example}
 shows a representative fragment from the 2020 baccalaureate training set: the
-program reads a natural number \texttt{n} and computes a function of its
-digits.
+program reads a natural number \texttt{n} then, for each of its digits,
+reads an additional value and extracts a specific digit from it using a
+nested for loop and floor division, accumulating the result in \texttt{m}.
 
-\begin{lstlisting}[language=pseudo, caption={A 2020 baccalaureate training problem in canonical Unicode notation.}, label=lst:example, float=t]
-citeste n
-p <- 1; m <- 0; k <- 0
-cat timp n != 0 executa
-    citeste x
-    pentru i <- 1, k executa
-        x <- [x / 10]
-    sf
-    daca x != 0 atunci
-        c <- x % 10
-    altfel
-        c <- n % 10
-    sf
-    m <- c * p + m
-    n <- [n / 10]; p <- p*10; k <- k+1
-sf
+\begin{lstlisting}[language=pseudo, caption={A 2020 baccalaureate training problem in canonical Unicode notation.}, label=lst:example]
+(*\kw{cite\c{s}te}*) n
+p(*$\leftarrow$*)1; m(*$\leftarrow$*)0; k(*$\leftarrow$*)0
+(*\lstBoxTL\kw{c\^{a}t}*) timp n(*$\neq$*)0 (*\kw{execut\u{a}}*)
+(*\lstBoxV*) (*\kw{cite\c{s}te}*) x
+(*\lstBoxV\lstBoxTL*)pentru i(*$\leftarrow$*)1,k (*\kw{execut\u{a}}*)
+(*\lstBoxV\lstBoxV*) x(*$\leftarrow$*)[x/10]
+(*\lstBoxV\lstBoxBL$\blacksquare$*)
+(*\lstBoxV\lstBoxTL\kw{dac\u{a}}*) x(*$\neq$*)0 atunci c(*$\leftarrow$*)x%10
+(*\lstBoxV\lstBoxV*)altfel c(*$\leftarrow$*)n%10
+(*\lstBoxV\lstBoxBL$\blacksquare$*)
+(*\lstBoxV*) m(*$\leftarrow$*)c*p+m
+(*\lstBoxV*) n(*$\leftarrow$*)[n/10]
+(*\lstBoxV*) p(*$\leftarrow$*)p*10; k(*$\leftarrow$*)k+1
+(*\lstBoxBL$\blacksquare$*)
 scrie m
 \end{lstlisting}
 
@@ -169,15 +177,14 @@ assignment ($\leftarrow$), the swap operator
 (\texttt{x $\leftrightarrow$ y}), floor division (\texttt{[expr]}),
 square root ($\sqrt{\phantom{x}}$), modulo, and single-line comments
 (\texttt{\#}).  Multi-statement lines separated by semicolons are also
-supported.  There are no user-defined functions or arrays:
-scalar arithmetic is the full extent of the dialect.
+supported.  The dialect has no user-defined functions, arrays, or types.
 
 \subsection{Parsing Challenges}
 
 Three properties make the dialect non-trivial to parse.  First, the canonical
 form mixes Unicode characters with ASCII text, requiring normalisation before
 a standard parser can process it.  Second, block structure is encoded via
-box-drawing characters (\texttt{│} as indentation, \texttt{■} as a block
+box-drawing characters (│ as indentation, $\blacksquare$ as a block
 closer), not keywords --- these must be translated to whitespace and the
 \texttt{sf} keyword.  Third, the dialect has no official formal grammar: it is
 defined implicitly through the corpus of textbooks and past examination papers,
@@ -216,10 +223,11 @@ variable-inspection panel --- a live display of name, value, and type updated
 after every statement --- is the closest precedent for Pseudo++'s debugger
 view, but it cannot process any form of pseudocode.
 
-Ben-Ari~\cite{benari2001} identifies the conceptual gap between pseudocode and
-executable code as a persistent difficulty for learners and advocates for tools
-that make the connection explicit and mechanical.  Pseudo++'s transpiler
-addresses this gap for the specific case of the Romanian baccalaureate dialect.
+Ben-Ari~\cite{benari2001} advocates for executable, feedback-rich environments
+as a means of supporting constructivist learning in CS education.  Pseudo++
+operationalises this principle for the specific case of the Romanian
+baccalaureate dialect, combining execution, debugging, and static feedback in a
+single tool.
 
 Table~\ref{tab:comparison} summarises the feature comparison.
 Pseudo++ is the only tool with all six capabilities; none of the surveyed tools
@@ -257,8 +265,9 @@ Python Tutor  & \checkmark & \checkmark & $\times$   & $\times$   & \checkmark &
 \subsection{Architecture}
 
 The toolchain is structured as four layers of independent C modules
-(Fig.~\ref{fig:arch}).  The \emph{utilities layer} (\texttt{environment},
-\texttt{string}, \texttt{hashmap}) provides general data structures.  The
+(Fig.~\ref{fig:arch}).  The \emph{utilities layer} (\texttt{value},
+\texttt{environment}, \texttt{diagnostic}) provides the core runtime value
+type, variable store, and shared diagnostic record used by all upper layers.  The
 \emph{foundation layer} (\texttt{parser}, \texttt{formatter}, \texttt{I/O})
 handles source ingestion and abstract I/O.  The \emph{capabilities layer}
 (\texttt{runtime}+\texttt{debugger}, \texttt{transpiler}, \texttt{check},
@@ -294,9 +303,9 @@ CLI binary and a WebAssembly module compiled by Emscripten~\cite{emscripten}.
 \node[box] (fmt)   at (3.7, 1.2) {formatter};
 \node[box] (io)    at (5.9, 1.2) {I/O};
 
-\node[box] (env) at (1.5, 0.3) {environment};
-\node[box] (str) at (3.7, 0.3) {string};
-\node[box] (hm)  at (5.9, 0.3) {hashmap};
+\node[box] (val)  at (1.4, 0.3) {value};
+\node[box] (env)  at (3.75, 0.3) {environment};
+\node[box] (diag) at (6.1, 0.3) {diagnostic};
 
 \node[prod, fill=violet!8, draw=violet!40,
       minimum width=2.4cm]
@@ -326,10 +335,11 @@ The I/O layer is the only difference between the two builds.  The CLI uses
 \texttt{io\_stdio} (standard \texttt{scanf}/\texttt{printf}); the WASM build
 uses \texttt{io\_buffered}, a queue-based mechanism in which JavaScript pushes
 input tokens and polls output tokens without blocking the browser's event loop.
-All execution, debugging, and transpilation logic is identical.
+All execution, debugging, transpilation, and static analysis logic is
+identical between the two builds.
 
 The WASM bridge exposes the toolchain to JavaScript via
-\texttt{EMSCRIPTEN\_KEEPALIVE}-annotated functions:
+\texttt{EMSCRIPTEN\_KEEPALIVE}-annotated functions (selected):
 
 \begin{lstlisting}[language=C, frame=none]
 int   pseudo_init(void);
@@ -341,6 +351,7 @@ char* pseudo_pop_output(void);
 char* pseudo_debug_step(void);
 char* pseudo_transpile(const char* src,
                        const char* lang);
+char* pseudo_check(const char* source);
 \end{lstlisting}
 
 This design guarantees that the browser and terminal interfaces produce
@@ -398,7 +409,7 @@ by the parser.  The formatter bridges the two representations in two passes.
 \emph{Pass 1 --- Symbol Substitution.}  A static hash map maps Unicode byte
 sequences to ASCII equivalents using a greedy maximum-munch strategy
 (e.g.\ $\leftarrow$ $\to$ \texttt{<-}, $\leq$ $\to$ \texttt{<=}, the
-box-drawing bar U+2502 $\to$ four spaces, $\blacksquare$ $\to$ \texttt{sf}).
+box-drawing bar │ $\to$ four spaces, $\blacksquare$ $\to$ \texttt{sf}).
 
 \emph{Pass 2 --- Structural Re-indentation.}  All leading whitespace is
 stripped and recomputed from scratch based on indent-trigger keywords
@@ -445,7 +456,7 @@ the front end supplies the missing token.
 Listing~\ref{lst:transpile} shows the C output produced by the transpiler for
 Listing~\ref{lst:example}.
 
-\begin{lstlisting}[language=C, caption={C code generated by the transpiler for the program in Listing~\ref{lst:example}.}, label=lst:transpile, float=t]
+\begin{lstlisting}[language=C, caption={C code generated by the transpiler for the program in Listing~\ref{lst:example}.}, label=lst:transpile, float=tp]
 #include <stdio.h>
 #include <math.h>
 
@@ -497,9 +508,10 @@ four loop constructs, grounded in the B\"{o}hm--Jacopini
 theorem~\cite{bohm-jacopini} and Dijkstra's structured-programming
 principles~\cite{dijkstra1968goto}.  This transformation is an explicit topic
 in the Romanian baccalaureate curriculum, and no existing tool provides
-automated support for it.
+automated support for it.  Listing~\ref{lst:equiv} shows a \texttt{pentru}
+loop converted to an equivalent \texttt{cat timp} loop.
 
-\begin{lstlisting}[language=pseudo, caption={Loop equivalence: a \texttt{pentru} (for) loop (top) converted to a \texttt{cat timp} (while) loop (bottom).}, label=lst:equiv, float=t]
+\begin{lstlisting}[language=pseudo, caption={Loop equivalence: a \texttt{pentru} (for) loop (top) converted to a \texttt{cat timp} (while) loop (bottom).}, label=lst:equiv]
 # original
 pentru i <- 1, n executa
     scrie i * i
@@ -517,49 +529,18 @@ Given a source string, a 0-indexed target line, and the desired output
 construct, the module: parses the source; locates the loop node via DFS;
 extracts header fields and body text; constructs the target form; and splices
 the new loop back into the source, preserving all surrounding code and
-indentation.  Listing~\ref{lst:equiv} shows an example conversion.
+indentation.
 
-Table~\ref{tab:loops} summarises the transformation rule for all twelve directed
-pairwise conversions.  The key structural distinction is between \emph{pre-test}
-loops (\texttt{for}, \texttt{while}) that may execute zero times and
-\emph{post-test} loops (\texttt{do-while}, \texttt{repeat}) that always execute
-at least once.  Converting from pre-test to post-test requires a guard
-(\textbf{if}~$C$~\textbf{then}) to preserve zero-iteration semantics; the
-reverse direction requires duplicating the body before the loop.
-
-\begin{table}[h]
-\centering
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\caption{Loop transformation rules. $B$ = body, $C$ = condition,
-  $i/a/b$ = counter/start/end.
-  \emph{guard}: wrap with \textbf{if}~$C$~\textbf{then}.
-  \emph{dup}: prepend one copy of $B$.}
-\label{tab:loops}
-\begin{tabular}{l|cccc}
-\toprule
-From$\backslash$To & \textbf{for} & \textbf{while} & \textbf{do-while} & \textbf{repeat} \\
-\midrule
-\textbf{for}      & ---
-                  & $i\!\leftarrow\!a$; while
-                  & $i\!\leftarrow\!a$; guard; do
-                  & $i\!\leftarrow\!a$; guard; repeat \\[2pt]
-\textbf{while}    & synth$^\dagger$
-                  & ---
-                  & guard; do
-                  & guard; repeat \\[2pt]
-\textbf{do-while} & synth$^\dagger$
-                  & dup; while $C$
-                  & ---
-                  & dup; repeat $\neg C$ \\[2pt]
-\textbf{repeat}   & synth$^\dagger$
-                  & dup; while $\neg C$
-                  & dup; do $\neg C$
-                  & --- \\
-\bottomrule
-\multicolumn{5}{l}{$^\dagger$counter variable synthesised from body.}
-\end{tabular}
-\end{table}
+The key structural distinction is between \emph{pre-test} loops
+(\texttt{for}, \texttt{while}) that may execute zero times and
+\emph{post-test} loops (\texttt{do-while}, \texttt{repeat}) that always
+execute at least once.  Two rewrite primitives cover all nine supported
+directed conversions: a \emph{guard} (wrapping the target loop in
+\textbf{if}~$C$~\textbf{then}) preserves zero-iteration semantics when
+converting from pre-test to post-test; \emph{body duplication} (prepending
+one copy of the body before the loop) handles the reverse direction.
+Converting \emph{to} a \texttt{for} loop is not supported, as it would
+require synthesising a counter variable from an arbitrary loop body.
 
 \subsection{Debugger}
 
@@ -577,15 +558,50 @@ variable inspector panel.
 
 The \texttt{check} module traverses the CST after parsing and reports a
 structured set of semantic diagnostics without executing the program.
-Each diagnostic is assigned a warning code, a source line and column, and a
-human-readable message.  Examples include: \texttt{W001} (variable assigned but
-never read), \texttt{W002} (variable read before any assignment), and
-\texttt{W003} (infinite loop body with no conditional exit).  The \texttt{check}
-subcommand in the CLI and the corresponding WASM export (\texttt{pseudo\_check})
-return all diagnostics as a JSON array.  This allows the web editor to display
-inline gutter markers and the CLI to be used as a linting step in a build
-pipeline --- for example, a teacher can batch-check a directory of student
-submissions with a single \texttt{pseudo check *.pseudo} invocation.
+Each diagnostic carries a severity (\texttt{error}, \texttt{warning}, or
+\texttt{info}), a code, a 1-indexed source line and column, and a
+Romanian-language message.  The analyzer produces ten warning codes
+(\texttt{W001}--\texttt{W010}), one informational code (\texttt{W011}),
+and one error code (\texttt{E001}).  If syntax errors are present, semantic
+checks are suppressed to avoid cascading false positives.
+
+\emph{Per-node checks} (DFS):
+\texttt{W001} flags division or modulo by a literal zero;
+\texttt{W002} flags self-assignment (\texttt{x <- x});
+\texttt{W004} flags empty block bodies.
+
+\emph{Constant-expression evaluation with propagation:}
+The analyzer embeds a constant folder covering arithmetic, comparisons,
+and logical connectives, including complementary identities
+(\texttt{A SI NOT A} $\equiv$ false, \texttt{A SAU NOT A} $\equiv$ true).
+A sequential propagation pass additionally tracks known variable values
+across statements, enabling pattern detection such as \texttt{x <- 5;
+daca x = 5 atunci\ldots}.
+\texttt{W003} reports statically-constant conditions (always-true or
+always-false); \texttt{W008} reports the unreachable code that results ---
+dead branches in conditionals and code following infinite loops.
+
+\emph{Multi-statement pattern checks:}
+\texttt{W005} detects the manual swap triplet
+($t \leftarrow a$; $a \leftarrow b$; $b \leftarrow t$)
+and suggests the built-in \texttt{a $\leftrightarrow$ b} operator;
+\texttt{W009} detects a value read from input and immediately overwritten
+before any use.
+
+\emph{Usage and control-flow checks:}
+\texttt{W006} flags modification of a \texttt{pentru} loop counter inside
+its own body; \texttt{W007} performs a two-pass whole-program analysis to
+identify variables assigned but never subsequently read;
+\texttt{W010} detects shadowed loop variables in nested \texttt{pentru} loops.
+
+\emph{Informational hints:}
+\texttt{W011} suggests simplifications for redundant boolean expressions
+(\texttt{x SI x} $\to$ \texttt{x}, \texttt{NOT NOT x} $\to$ \texttt{x}).
+
+The \texttt{check} subcommand prints each diagnostic as a single line
+(\texttt{avertisment[CODE] la linia L, coloana C: mesaj}).  The
+\texttt{pseudo\_check} WASM export serialises all diagnostics as a JSON
+array for the web editor's inline gutter markers.
 
 \subsection{Web Editor}
 
@@ -618,7 +634,7 @@ The static analyser has marked line~2 with a diagnostic squiggly because
   point; the condition panel confirms \texttt{n~$\neq$~0}~$\to$~\textsc{true}
   and the variable table shows the live state at step~9.
   Line~2 carries a diagnostic squiggly: the static analyser has detected that
-  \texttt{x} is assigned but never read (\texttt{W001}).
+  \texttt{x} is assigned but never read (\texttt{W007}).
   Visual Mode is active: assignment arrows, inequality symbols, and the
   block-close square are rendered in Unicode throughout the source pane.}
 \label{fig:editor}
@@ -637,8 +653,7 @@ identical output.
 
 \begin{lstlisting}[language=bash, caption={A CLI session: static analysis, execution, and transpilation of the same program.  Diagnostic messages are in Romanian, the target language of the tool.}, label=lst:cli, float=h]
 $ pseudo check demo.pseudo
-avertisment[W007] la linia 2, coloana 1:
-  Variabila 'x' este definita dar niciodata folosita
+avertisment[W007] la linia 2, coloana 1: Variabila 'x' este definita dar niciodata folosita
 $ pseudo run demo.pseudo <<< "123"
 6
 $ pseudo transpile c demo.pseudo | gcc -xc -lm - -o demo
@@ -699,10 +714,7 @@ Transpiler correctness is verified for the C target on the 32 problems from
 the 2020--2021 sets.  All \textbf{32 out of 32} problems (\textbf{100\,\%})
 produce compilable C code whose output matches the interpreter reference
 exactly.  GCC reported no compilation errors or warnings for any generated
-file.  The C++ and Pascal backends share the same emission pass and
-\texttt{lang\_ops\_t} abstraction; correctness is established by construction
-from the shared code path.
-
+file.
 \subsection{Loop Equivalence Semantic Preservation}
 
 The equivalence module is evaluated with 9 directed conversion tests, covering
@@ -720,16 +732,9 @@ ordering, edge cases (empty input, replacements at boundaries), keyword
 normalisation for diacritic variants, and structural re-indentation.
 All 39 tests pass.
 
-\subsection{Performance}
-
-Execution time was measured by running each of the 32 baccalaureate problems
-100 times in sequence on an AMD Ryzen~5 3600 running Arch Linux with a release
-build (\texttt{-O3}).  The mean wall-clock time per problem was
-\textbf{2.4\,ms}, dominated by process start-up and the Tree-sitter parse
-rather than the interpreter loop itself.  In the web editor the start-up cost
-is paid once on module load; subsequent invocations reuse the
-already-initialised runtime, confirming sub-100\,ms response times for all
-tested problems --- well within the threshold of perceived immediacy.
+The \texttt{check} module is covered by 20 unit tests, two per diagnostic
+code: one positive case that triggers the warning and one negative case that
+confirms its absence.  All 20 tests pass.
 
 \subsection{Discussion}
 
@@ -794,14 +799,13 @@ and the web editor while eliminating any server-side infrastructure requirement.
 Directions for future work include: introducing a dialect-agnostic intermediate
 representation to support additional Romanian pseudocode dialects (e.g.\ the
 Babe\c{s}-Bolyai University admission examination dialect) without duplicating
-backend logic; expanding the static analysis module with data-flow diagnostics
-such as use-before-assignment and unreachable code detection; adding
-snapshot-based step-back debugging; and integrating the WASM module into
-existing Romanian educational platforms such as pbinfo.ro as a native
-pseudocode execution target.
+backend logic; deepening the existing static analysis with full data-flow
+diagnostics and richer constant propagation; adding snapshot-based step-back
+debugging; and integrating the WASM module into existing Romanian educational
+platforms such as pbinfo.ro as a native pseudocode execution target.
 
 Pseudo++ is available as open-source software together with the full
-integration test suite.
+integration test suite at \url{https://github.com/BujorelActimel/pseudo}.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \bibliographystyle{IEEEtran}

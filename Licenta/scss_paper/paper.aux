@@ -1,13 +1,15 @@
 \relax 
-\citation{romanian-curriculum}
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
 \citation{pseudocodro}
-\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{}\protected@file@percent }
-\newlabel{sec:intro}{{I}{1}{}{section.1}{}}
-\newlabel{lst:example}{{1}{1}{}{lstlisting.1}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}A 2020 baccalaureate training problem in canonical Unicode notation.}{1}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {II}The Baccalaureate Pseudocode Dialect}{1}{}\protected@file@percent }
-\newlabel{sec:dialect}{{II}{1}{}{section.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Notation and Language Features}{1}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{sec:intro}{{I}{1}{Introduction}{section.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}The Baccalaureate Pseudocode Dialect}{1}{section.2}\protected@file@percent }
+\newlabel{sec:dialect}{{II}{1}{The Baccalaureate Pseudocode Dialect}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Notation and Language Features}{1}{subsection.2.1}\protected@file@percent }
+\newlabel{lst:example}{{1}{1}{A 2020 baccalaureate training problem in canonical Unicode notation}{lstlisting.1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}A 2020 baccalaureate training problem in canonical Unicode notation.}{1}{lstlisting.1}\protected@file@percent }
 \citation{psint}
 \citation{raptor}
 \citation{flowgorithm}
@@ -17,81 +19,77 @@
 \citation{pythontutor}
 \citation{benari2001}
 \citation{emscripten}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Parsing Challenges}{2}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {III}Related Work}{2}{}\protected@file@percent }
-\newlabel{sec:related}{{III}{2}{}{section.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {IV}System Design}{2}{}\protected@file@percent }
-\newlabel{sec:design}{{IV}{2}{}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Architecture}{2}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Feature comparison of educational programming tools. \textit  {Trans}: transpilation to a compilable language. \textit  {Lint}: static analysis / semantic warnings. \textit  {Web}: browser-based, no installation. \textit  {OSS}: open source.}}{2}{}\protected@file@percent }
-\newlabel{tab:comparison}{{I}{2}{}{table.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Pseudo++ module dependency graph. The C core library is compiled to both a native binary (CLI) and a WebAssembly module (Web Editor), sharing all execution logic.}}{2}{}\protected@file@percent }
-\newlabel{fig:arch}{{1}{2}{}{figure.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Single C Core, Two Builds}{2}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Parsing Challenges}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {III}Related Work}{2}{section.3}\protected@file@percent }
+\newlabel{sec:related}{{III}{2}{Related Work}{section.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Feature comparison of educational programming tools. \textit  {Trans}: transpilation to a compilable language. \textit  {Lint}: static analysis / semantic warnings. \textit  {Web}: browser-based, no installation. \textit  {OSS}: open source.}}{2}{table.1}\protected@file@percent }
+\newlabel{tab:comparison}{{I}{2}{Feature comparison of educational programming tools. \textit {Trans}: transpilation to a compilable language. \textit {Lint}: static analysis / semantic warnings. \textit {Web}: browser-based, no installation. \textit {OSS}: open source}{table.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}System Design}{2}{section.4}\protected@file@percent }
+\newlabel{sec:design}{{IV}{2}{System Design}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Architecture}{2}{subsection.4.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Pseudo++ module dependency graph. The C core library is compiled to both a native binary (CLI) and a WebAssembly module (Web Editor), sharing all execution logic.}}{2}{figure.1}\protected@file@percent }
+\newlabel{fig:arch}{{1}{2}{Pseudo++ module dependency graph. The C core library is compiled to both a native binary (CLI) and a WebAssembly module (Web Editor), sharing all execution logic}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Single C Core, Two Builds}{2}{subsection.4.2}\protected@file@percent }
 \citation{treesitter}
 \citation{treesitter-thesis}
 \citation{fnv-hash}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Core Components}{3}{section.5}\protected@file@percent }
+\newlabel{sec:components}{{V}{3}{Core Components}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Grammar}{3}{subsection.5.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Expression precedence levels (lowest to highest).}}{3}{table.2}\protected@file@percent }
+\newlabel{tab:prec}{{II}{3}{Expression precedence levels (lowest to highest)}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Formatter}{3}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Interpreter}{3}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Transpiler}{3}{subsection.5.4}\protected@file@percent }
 \citation{bohm-jacopini}
 \citation{dijkstra1968goto}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Core Components}{3}{}\protected@file@percent }
-\newlabel{sec:components}{{V}{3}{}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Grammar}{3}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Expression precedence levels (lowest to highest).}}{3}{}\protected@file@percent }
-\newlabel{tab:prec}{{II}{3}{}{table.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Formatter}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Interpreter}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Transpiler}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Loop Equivalence Module}{3}{}\protected@file@percent }
+\newlabel{lst:transpile}{{2}{4}{C code generated by the transpiler for the program in Listing~\ref {lst:example}}{lstlisting.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}C code generated by the transpiler for the program in Listing~\ref {lst:example}.}{4}{lstlisting.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Loop Equivalence Module}{4}{subsection.5.5}\protected@file@percent }
+\newlabel{lst:equiv}{{3}{4}{Loop equivalence: a \texttt {pentru} (for) loop (top) converted to a \texttt {cat timp} (while) loop (bottom)}{lstlisting.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}Loop equivalence: a \texttt  {pentru} (for) loop (top) converted to a \texttt  {cat timp} (while) loop (bottom).}{4}{lstlisting.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Debugger}{4}{subsection.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-G}}Static Analysis (\texttt  {check} Module)}{4}{subsection.5.7}\protected@file@percent }
 \citation{monaco}
 \citation{monarch}
-\newlabel{lst:transpile}{{2}{4}{}{lstlisting.2}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}C code generated by the transpiler for the program in Listing~\ref {lst:example}.}{4}{}\protected@file@percent }
-\newlabel{lst:equiv}{{3}{4}{}{lstlisting.3}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}Loop equivalence: a \texttt  {pentru} (for) loop (top) converted to a \texttt  {cat timp} (while) loop (bottom).}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Debugger}{4}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Loop transformation rules. $B$ = body, $C$ = condition, $i/a/b$ = counter/start/end. \emph  {guard}: wrap with \textbf  {if}~$C$~\textbf  {then}. \emph  {dup}: prepend one copy of $B$.}}{4}{}\protected@file@percent }
-\newlabel{tab:loops}{{III}{4}{}{table.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-G}}Static Analysis (\texttt  {check} Module)}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-H}}Web Editor}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-I}}Command-Line Interface}{4}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The Pseudo++ web editor with Visual Mode, step-through debugger, and static analysis active simultaneously. Line~4 (\texttt  {cat timp n~$\neq  $~0 executa}) is the current execution point; the condition panel confirms \texttt  {n~$\neq  $~0}~$\to $~\textsc  {true} and the variable table shows the live state at step~9. Line~2 carries a diagnostic squiggly: the static analyser has detected that \texttt  {x} is assigned but never read (\texttt  {W001}). Visual Mode is active: assignment arrows, inequality symbols, and the block-close square are rendered in Unicode throughout the source pane.}}{5}{}\protected@file@percent }
-\newlabel{fig:editor}{{2}{5}{}{figure.2}{}}
-\newlabel{lst:cli}{{4}{5}{}{lstlisting.4}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {4}A CLI session: static analysis, execution, and transpilation of the same program. Diagnostic messages are in Romanian, the target language of the tool.}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VI}Evaluation}{5}{}\protected@file@percent }
-\newlabel{sec:evaluation}{{VI}{5}{}{section.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Testing Methodology}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Correctness on Baccalaureate Problems}{5}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Baccalaureate integration test dataset.}}{5}{}\protected@file@percent }
-\newlabel{tab:dataset}{{IV}{5}{}{table.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-H}}Web Editor}{5}{subsection.5.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-I}}Command-Line Interface}{5}{subsection.5.9}\protected@file@percent }
+\newlabel{lst:cli}{{4}{5}{A CLI session: static analysis, execution, and transpilation of the same program. Diagnostic messages are in Romanian, the target language of the tool}{lstlisting.4}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {4}A CLI session: static analysis, execution, and transpilation of the same program. Diagnostic messages are in Romanian, the target language of the tool.}{5}{lstlisting.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Evaluation}{5}{section.6}\protected@file@percent }
+\newlabel{sec:evaluation}{{VI}{5}{Evaluation}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Testing Methodology}{5}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Correctness on Baccalaureate Problems}{5}{subsection.6.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Baccalaureate integration test dataset.}}{5}{table.3}\protected@file@percent }
+\newlabel{tab:dataset}{{III}{5}{Baccalaureate integration test dataset}{table.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Transpiler Verification}{5}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Loop Equivalence Semantic Preservation}{5}{subsection.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-E}}Unit Tests}{5}{subsection.6.5}\protected@file@percent }
 \citation{lewis2003omniscient}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The Pseudo++ web editor with Visual Mode, step-through debugger, and static analysis active simultaneously. Line~4 (\texttt  {cat timp n~$\neq  $~0 executa}) is the current execution point; the condition panel confirms \texttt  {n~$\neq  $~0}~$\to $~\textsc  {true} and the variable table shows the live state at step~9. Line~2 carries a diagnostic squiggly: the static analyser has detected that \texttt  {x} is assigned but never read (\texttt  {W007}). Visual Mode is active: assignment arrows, inequality symbols, and the block-close square are rendered in Unicode throughout the source pane.}}{6}{figure.2}\protected@file@percent }
+\newlabel{fig:editor}{{2}{6}{The Pseudo++ web editor with Visual Mode, step-through debugger, and static analysis active simultaneously. Line~4 (\texttt {cat timp n~$\neq $~0 executa}) is the current execution point; the condition panel confirms \texttt {n~$\neq $~0}~$\to $~\textsc {true} and the variable table shows the live state at step~9. Line~2 carries a diagnostic squiggly: the static analyser has detected that \texttt {x} is assigned but never read (\texttt {W007}). Visual Mode is active: assignment arrows, inequality symbols, and the block-close square are rendered in Unicode throughout the source pane}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-F}}Discussion}{6}{subsection.6.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-G}}Limitations}{6}{subsection.6.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusions}{6}{section.7}\protected@file@percent }
+\newlabel{sec:conclusions}{{VII}{6}{Conclusions}{section.7}{}}
 \bibstyle{IEEEtran}
 \bibdata{references}
-\bibcite{romanian-curriculum}{1}
-\bibcite{pseudocodro}{2}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Transpiler Verification}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Loop Equivalence Semantic Preservation}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-E}}Unit Tests}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-F}}Performance}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-G}}Discussion}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-H}}Limitations}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusions}{6}{}\protected@file@percent }
-\newlabel{sec:conclusions}{{VII}{6}{}{section.7}{}}
-\@writefile{toc}{\contentsline {section}{References}{6}{}\protected@file@percent }
-\bibcite{psint}{3}
-\bibcite{raptor}{4}
-\bibcite{flowgorithm}{5}
-\bibcite{replit}{6}
-\bibcite{onlinegdb}{7}
-\bibcite{pythontutor}{8}
-\bibcite{benari2001}{9}
-\bibcite{emscripten}{10}
-\bibcite{treesitter}{11}
-\bibcite{treesitter-thesis}{12}
-\bibcite{fnv-hash}{13}
-\bibcite{bohm-jacopini}{14}
-\bibcite{dijkstra1968goto}{15}
-\bibcite{monaco}{16}
-\bibcite{monarch}{17}
-\bibcite{lewis2003omniscient}{18}
+\bibcite{pseudocodro}{1}
+\bibcite{psint}{2}
+\bibcite{raptor}{3}
+\bibcite{flowgorithm}{4}
+\bibcite{replit}{5}
+\bibcite{onlinegdb}{6}
+\bibcite{pythontutor}{7}
+\bibcite{benari2001}{8}
+\bibcite{emscripten}{9}
+\bibcite{treesitter}{10}
+\bibcite{treesitter-thesis}{11}
+\bibcite{fnv-hash}{12}
+\bibcite{bohm-jacopini}{13}
+\bibcite{dijkstra1968goto}{14}
+\bibcite{monaco}{15}
+\bibcite{monarch}{16}
+\bibcite{lewis2003omniscient}{17}
+\@writefile{toc}{\contentsline {section}{References}{7}{section*.1}\protected@file@percent }
 \gdef \@abspage@last{7}

@@ -1,0 +1,25 @@
+{
+  "name": "maple-highlight",
+  "displayName": "Maple Syntax Highlighting",
+  "description": "Syntax highlighting for Maple source files (.mpl)",
+  "version": "0.1.0",
+  "engines": { "vscode": "^1.70.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "maple",
+        "aliases": ["Maple", "maple"],
+        "extensions": [".mpl"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "maple",
+        "scopeName": "source.maple",
+        "path": "./syntaxes/maple.tmLanguage.json"
+      }
+    ]
+  }
+}

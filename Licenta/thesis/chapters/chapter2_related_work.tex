@@ -14,7 +14,7 @@ direct feature comparison.
 \label{sec:online-editors}
 
 The most commonly used tools in Romanian high-school computer science
-classes are browser-based compilers for the two target exam languages,
+classes are browser-based programming environments for the two target exam languages,
 C++ and Pascal.  Platforms such as Replit \cite{replit} and OnlineGDB
 \cite{onlinegdb} provide a full edit-compile-run loop in the browser
 without any local installation, which is practical in lab settings where
@@ -108,8 +108,8 @@ constructed by snapping coloured blocks together; there is no text to
 type or syntax error to make.  Scratch targets an 8--16 age range and
 its abstraction level --- event-driven sprites reacting to messages ---
 is misaligned with the baccalaureate curriculum, which requires reasoning
-about arithmetic, nested loops, and sorting algorithms expressed as
-algebraic operations on variables.
+about variables, arithmetic expressions, nested loops, and algorithms in
+an imperative style.
 
 \textbf{Blockly} \cite{blockly}, Google's open-source block editor
 library, is lower-level than Scratch and can generate Python or
@@ -124,66 +124,36 @@ linear, text-based pseudocode notation that Romanian students write on
 paper.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Transpilation in Educational Contexts}
-\label{sec:transpilation-education}
-
-Transpilation from an educational notation to a standard programming
-language has been explored primarily in the block-based domain.  Tools
-such as Blockly and Snap! generate Python or JavaScript from block
-programs; MIT App Inventor similarly produces Java-compatible bytecode
-from a block graph.  In all of these cases the input is visual and
-structured-by-construction, so type inference and syntactic normalisation
-are either trivial or unnecessary.
-
-The text-based pseudocode domain is less explored.  Ben-Ari
-\cite{benari2001} identifies the conceptual gap between pseudocode and
-executable code as a persistent difficulty for learners and advocates for
-tools that make the connection explicit and mechanical, but the emphasis
-in the literature has been on pedagogy rather than on building such
-tools.  Flowgorithm's export capability (Section~\ref{sec:pseudocode-tools})
-is the only directly comparable implementation, but it starts from a
-graphical flowchart rather than from text.
-
-Pseudo++'s transpiler addresses this gap for the specific case of the
-Romanian baccalaureate dialect.  The two-pass design --- a type-collection
-pass followed by a code-emission pass --- handles the mismatch between
-the dynamically typed pseudocode and the statically typed target languages
-(C, C++, Pascal) without requiring explicit type annotations from the
-student.  The loop-equivalence module additionally provides an interactive
-implementation of a transformation that the curriculum requires students
-to perform on paper, and for which no automated counterpart exists in any
-of the surveyed tools.
-
-% ─────────────────────────────────────────────────────────────────────────────
 \section{Comparison with the Present Work}
 \label{sec:comparison}
 
 Table~\ref{tab:comparison} summarises the capabilities of the surveyed
-tools across six dimensions.
+tools across seven dimensions.
 
 \begin{table}[h]
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{l c c c c c c}
+\begin{tabular}{l c c c c c c c}
 \hline
 \textbf{Tool} &
 \textbf{Executes} &
 \textbf{Debugger} &
 \textbf{Transpiles} &
 \textbf{Linter} &
+\begin{tabular}{@{}c@{}}\textbf{Loop-}\\\textbf{equiv.}\end{tabular} &
 \begin{tabular}{@{}c@{}}\textbf{Browser-}\\\textbf{based}\end{tabular} &
 \begin{tabular}{@{}c@{}}\textbf{Open}\\\textbf{source}\end{tabular} \\
 \hline
-Pseudocod.ro      & \checkmark & $\times$   & $\times$   & $\times$   & \checkmark & $\times$   \\
-PSeInt            & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   & \checkmark \\
-RAPTOR            & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   & $\times$   \\
-Flowgorithm       & \checkmark & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   \\
-Replit            & \checkmark & partial    & $\times$   & $\times$   & \checkmark & $\times$   \\
-Python Tutor      & \checkmark & \checkmark & $\times$   & $\times$   & \checkmark & \checkmark \\
-Scratch           & \checkmark & $\times$   & $\times$   & $\times$   & \checkmark & \checkmark \\
-Blockly           & $\times$   & $\times$   & \checkmark & $\times$   & \checkmark & \checkmark \\
-\textbf{Pseudo++} & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+Pseudocod.ro      & \checkmark & $\times$   & $\times$   & $\times$   & $\times$   & \checkmark & $\times$   \\
+PSeInt            & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   & $\times$   & \checkmark \\
+RAPTOR            & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   & $\times$   & $\times$   \\
+Flowgorithm       & \checkmark & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   & $\times$   \\
+Replit            & \checkmark & partial    & $\times$   & $\times$   & $\times$   & \checkmark & $\times$   \\
+Python Tutor      & \checkmark & \checkmark & $\times$   & $\times$   & $\times$   & \checkmark & \checkmark \\
+Scratch           & \checkmark & $\times$   & $\times$   & $\times$   & $\times$   & \checkmark & \checkmark \\
+Blockly           & $\times$   & $\times$   & \checkmark & $\times$   & $\times$   & \checkmark & \checkmark \\
+\textbf{Pseudo++} & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
 \hline
 \end{tabular}
 \caption{Feature comparison of educational programming tools.
@@ -191,18 +161,18 @@ Blockly           & $\times$   & $\times$   & \checkmark & $\times$   & \checkma
   and errors independently of execution.
   \textit{Transpiles}: ability to produce compilable source in a
   standard language from the tool's primary input representation.
+  \textit{Loop-equiv.}: interactive loop-equivalence transformation.
   \textit{Partial} for Replit's debugger reflects that step-through
   debugging is available for C++ but not for Pascal.}
 \label{tab:comparison}
 \end{table}
 
 The table highlights a gap that none of the surveyed tools fills: the
-combination of execution, step-through debugging, transpilation, and
-static analysis in a single browser-based, open-source tool.  Flowgorithm
-comes closest --- execution, debugger, and transpiler --- but it operates
-on graphical flowcharts rather than text pseudocode and ships only as a
-desktop application.  No other text-based tool combines all four
-processing modes.
+combination of execution, step-through debugging, transpilation, linting,
+and loop-equivalence transformations in a single browser-based,
+open-source tool.  Flowgorithm comes closest --- execution, debugger, and
+transpiler --- but it operates on graphical flowcharts rather than text
+pseudocode and ships only as a desktop application.
 
 Several qualitative differences complement the binary comparison.
 PSeInt and RAPTOR require local installation, a practical barrier in
@@ -210,8 +180,6 @@ school lab environments.  Python Tutor's visualisation model is the
 closest precedent for Pseudo++'s variable-inspection panel, but it
 cannot process any form of pseudocode.  Replit and OnlineGDB expose
 the student to the full syntactic constraints of C++ or Pascal before
-any algorithm can be tested.  None of the surveyed tools implement
-loop-equivalence transformations as an interactive feature, despite
-that being an explicit examination topic in the Romanian curriculum.
+any algorithm can be tested.
 No existing tool natively executes the Romanian baccalaureate
 pseudocode dialect: this remains the primary motivation for Pseudo++.
